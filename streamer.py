@@ -58,17 +58,38 @@ class Streamer(StreamerInterface):
         return self._username == username
 
 
-# Build the streamer instances and the roles
-streamers = []
-with open(STREAMER_DATASOURCE) as streamers_file:
-    data = json.load(streamers_file)
+class MapperInterface(ABC):
+    @abstractmethod
+    def map(self):
+        pass
 
-    for streamer in data['Streamers']:
+
+class RoleMapper(MapperInterface):
+    def map(self, datasource: dict):
         roles = []
-        for role in streamer['roles']:
+        for role in datasource:
             roles.append(Role(role['role_id'], role['name']))
 
-        streamers.append(Streamer(streamer['username'], roles))
+        return roles
+
+
+class StreamerMapper(MapperInterface):
+    def map(self):
+        streamers = []
+        with open(STREAMER_DATASOURCE) as streamers_file:
+            data = json.load(streamers_file)
+
+            for streamer in data['Streamers']:
+                role_mapper = RoleMapper()
+                roles = role_mapper.map(streamer['roles'])
+
+                streamers.append(Streamer(streamer['username'], roles))
+
+        return streamers
+
+
+streamerMapper = StreamerMapper()
+streamers = streamerMapper.map()
 
 # Loop through all streamers and their roles and print for debug
 for idx, streamer in enumerate(streamers):
