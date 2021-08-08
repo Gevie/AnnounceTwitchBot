@@ -4,7 +4,6 @@ import json
 import os
 
 load_dotenv()
-STREAMER_DATASOURCE = os.getenv('STREAMER_DATASOURCE')
 
 
 class RoleInterface(ABC):
@@ -18,8 +17,8 @@ class RoleInterface(ABC):
 
 
 class Role(RoleInterface):
-    def __init__(self, id: int, name: str):
-        self._id = id
+    def __init__(self, role_id: int, name: str):
+        self._id = role_id
         self._name = name
 
     def get_id(self) -> int:
@@ -30,6 +29,10 @@ class Role(RoleInterface):
 
 
 class StreamerInterface(ABC):
+    @abstractmethod
+    def get_id(self) -> int:
+        pass
+
     @abstractmethod
     def get_username(self) -> str:
         pass
@@ -44,9 +47,13 @@ class StreamerInterface(ABC):
 
 
 class Streamer(StreamerInterface):
-    def __init__(self, username: str, roles: dict):
+    def __init__(self, user_id: int, username: str, roles: dict):
+        self._id = user_id
         self._username = username
         self._roles = roles
+
+    def get_id(self) -> int:
+        return self._id
 
     def get_username(self) -> str:
         return self._username
@@ -60,12 +67,12 @@ class Streamer(StreamerInterface):
 
 class MapperInterface(ABC):
     @abstractmethod
-    def map(self):
+    def map(self) -> list:
         pass
 
 
 class RoleMapper(MapperInterface):
-    def map(self, datasource: dict):
+    def map(self, datasource: dict) -> list:
         roles = []
         for role in datasource:
             roles.append(Role(role['role_id'], role['name']))
@@ -74,7 +81,9 @@ class RoleMapper(MapperInterface):
 
 
 class StreamerMapper(MapperInterface):
-    def map(self):
+    def map(self) -> list:
+        STREAMER_DATASOURCE = os.getenv('STREAMER_DATASOURCE')
+
         streamers = []
         with open(STREAMER_DATASOURCE) as streamers_file:
             data = json.load(streamers_file)
@@ -83,18 +92,6 @@ class StreamerMapper(MapperInterface):
                 role_mapper = RoleMapper()
                 roles = role_mapper.map(streamer['roles'])
 
-                streamers.append(Streamer(streamer['username'], roles))
+                streamers.append(Streamer(streamer['user_id'], streamer['username'], roles))
 
         return streamers
-
-
-streamerMapper = StreamerMapper()
-streamers = streamerMapper.map()
-
-# Loop through all streamers and their roles and print for debug
-for idx, streamer in enumerate(streamers):
-    print("\n----- Streamer {} -----".format(idx))
-    print("Username: ", streamer.get_username())
-    for role in streamer.get_roles():
-        print("Role ID:", role.get_id())
-        print("Role Name:", role.get_name())
