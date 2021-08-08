@@ -1,36 +1,66 @@
+from abc import ABC, abstractmethod
+from dotenv import load_dotenv
 import json
+import os
+
+load_dotenv()
+STREAMER_DATASOURCE = os.getenv('STREAMER_DATASOURCE')
 
 
-class Role:
+class RoleInterface(ABC):
+    @abstractmethod
+    def get_id(self) -> int:
+        pass
+
+    @abstractmethod
+    def get_name(self) -> str:
+        pass
+
+
+class Role(RoleInterface):
     def __init__(self, id: int, name: str):
         self._id = id
         self._name = name
 
-    def get_id(self):
+    def get_id(self) -> int:
         return self._id
 
-    def get_name(self):
+    def get_name(self) -> str:
         return self._name
 
 
-class Streamer:
-    def __init__(self, username: str, roles: Role):
+class StreamerInterface(ABC):
+    @abstractmethod
+    def get_username(self) -> str:
+        pass
+
+    @abstractmethod
+    def get_roles(self) -> dict:
+        pass
+
+    @abstractmethod
+    def is_match(self, username) -> bool:
+        pass
+
+
+class Streamer(StreamerInterface):
+    def __init__(self, username: str, roles: dict):
         self._username = username
         self._roles = roles
 
-    def get_username(self):
+    def get_username(self) -> str:
         return self._username
 
-    def get_roles(self):
+    def get_roles(self) -> dict:
         return self._roles
 
-    def is_match(self, username):
+    def is_match(self, username) -> bool:
         return self._username == username
 
 
 # Build the streamer instances and the roles
 streamers = []
-with open('streamers.json') as streamers_file:
+with open(STREAMER_DATASOURCE) as streamers_file:
     data = json.load(streamers_file)
 
     for streamer in data['Streamers']:

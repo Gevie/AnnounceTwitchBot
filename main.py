@@ -5,13 +5,10 @@ from dotenv import load_dotenv
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 LISTENING_CHANNEL = os.getenv('DISCORD_LISTEN_CHANNEL')
+BOT_ID = os.getenv('DISCORD_BOT_ID')
 
 
-class AnnounceClient:
-
-    def __init__(self, client):
-        self.client = client
-
+class AnnounceClient(discord.Client):
     async def on_ready(self):
         print(f'{self.user} has connected to Discord!')
 
@@ -19,11 +16,11 @@ class AnnounceClient:
         if message.channel.id != LISTENING_CHANNEL:
             pass
 
-        if message.author == '873684470149033994'
-            pass
+        # if message.author == BOT_ID
+        #     pass
 
         await message.channel.send('Identified a message in #test-announce!')
 
 
-announce = AnnounceClient(discord.Client)
+announce = AnnounceClient()
 announce.run(TOKEN)
