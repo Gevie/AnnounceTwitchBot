@@ -75,7 +75,7 @@ class RoleMapper(MapperInterface):
     def map(self, datasource: dict) -> list:
         roles = []
         for role in datasource:
-            roles.append(Role(role['role_id'], role['name']))
+            roles.append(Role(int(role['role_id']), role['name']))
 
         return roles
 
@@ -92,6 +92,6 @@ class StreamerMapper(MapperInterface):
                 role_mapper = RoleMapper()
                 roles = role_mapper.map(streamer['roles'])
 
-                streamers.append(Streamer(streamer['user_id'], streamer['username'], roles))
+                streamers.append(Streamer(int(streamer['user_id']), streamer['username'], roles))
 
         return streamers
