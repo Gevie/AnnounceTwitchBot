@@ -38,7 +38,7 @@ class StreamerInterface(ABC):
         pass
 
     @abstractmethod
-    def get_roles(self) -> dict:
+    def get_roles(self) -> list:
         pass
 
     @abstractmethod
@@ -47,7 +47,7 @@ class StreamerInterface(ABC):
 
 
 class Streamer(StreamerInterface):
-    def __init__(self, user_id: int, username: str, roles: dict):
+    def __init__(self, user_id: int, username: str, roles: list):
         self._id = user_id
         self._username = username
         self._roles = roles
@@ -58,7 +58,7 @@ class Streamer(StreamerInterface):
     def get_username(self) -> str:
         return self._username
 
-    def get_roles(self) -> dict:
+    def get_roles(self) -> list:
         return self._roles
 
     def is_match(self, username) -> bool:
