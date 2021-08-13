@@ -1,3 +1,4 @@
+import re
 from abc import ABC, abstractmethod
 from dotenv import load_dotenv
 import json
@@ -36,17 +37,30 @@ class JsonHandler(DatasourceHandlerInterface):
     def __exists(self) -> bool:
         return os.path.isfile(self.__datasource) and os.access(self.__datasource, os.R_OK)
 
-    def __load(self) -> None:
+    def __load(self) -> dict:
         if not self.__exists():
             create_template = self.__create()
             if not create_template:
                 raise RuntimeError('Unable to load or create the datasource template')
 
         with open(self.__datasource) as datasource:
-            self.__json = json.load(datasource)
+            return json.load(datasource)
 
     def add_streamer(self, user_id: int, username: str) -> bool:
-        self.__load()
+        datasource = self.__load()
+
+        with open(self.__template_streamer) as streamer_template:
+            streamer = streamer_template.read()
+
+        streamer = re.sub('<user_id:placeholder>', str(user_id), streamer)
+        streamer = re.sub('<username:placeholder>', username, streamer)
+
+        datasource['Streamers'].append(streamer)
+        print(datasource)
+
+        datasource_file = open(self.__datasource, "w")
+        json.dump(datasource, datasource_file)
+        datasource_file.close()
 
         pass
 
