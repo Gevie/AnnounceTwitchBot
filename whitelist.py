@@ -1,8 +1,7 @@
-import re
 from abc import ABC, abstractmethod
 from dotenv import load_dotenv
-import json
 import io
+import json
 import os
 
 load_dotenv()
@@ -15,11 +14,23 @@ class NotFoundException(Exception):
 
 class DatasourceHandlerInterface(ABC):
     @abstractmethod
+    def add_role_to_streamer(self, user_id: int, role_id: int, name: str) -> None:
+        pass
+
+    @abstractmethod
     def add_streamer(self, user_id: int, username: str) -> None:
         pass
 
     @abstractmethod
-    def add_role_to_streamer(self, user_id: int, role_id: int, name: str) -> None:
+    def exists(self, user_id: int) -> bool:
+        pass
+
+    @abstractmethod
+    def find(self, user_id: int) -> list:
+        pass
+
+    @abstractmethod
+    def role_exists(self, roles: list, role_id: int) -> bool:
         pass
 
 
@@ -107,6 +118,37 @@ class JsonHandler(DatasourceHandlerInterface):
         json.dump(contents, datasource_file, ensure_ascii=False, indent='\t', separators=(',', ': '))
         datasource_file.close()
 
+    def add_role_to_streamer(self, user_id: int, role_id: int, name: str) -> None:
+        """
+        Adds a new role to a streamer
+
+        Args:
+            user_id (int): The user id of the streamer
+            role_id (int): The id of the role
+            name (str): The name of the role
+
+        Returns:
+            bool: True if successful
+
+        Raises:
+            ValueError: If the streamer already has the role which we are trying to add
+        """
+        streamer = self.find(user_id)
+        if self.role_exists(streamer['roles'], role_id):
+            raise ValueError('Cannot add role id {} to user {} as it already exists'.format(role_id, user_id))
+
+        with open(self.__template_role) as role_template:
+            role = json.load(role_template)
+
+        role['role_id'] = role_id;
+        role['name'] = name;
+        streamer['roles'].append(role);
+
+        contents = self.__load_contents()
+        streamer_index = self.get_streamer_index(user_id)
+        contents['Streamers'][streamer_index] = streamer
+        self.__save_file(contents)
+
     def add_streamer(self, user_id: int, username: str) -> None:
         """
         Adds a new streamer to the datasource
@@ -132,44 +174,6 @@ class JsonHandler(DatasourceHandlerInterface):
         streamer['username'] = username
         contents['Streamers'].append(streamer)
         self.__save_file(contents)
-
-    def add_role_to_streamer(self, user_id: int, role_id: int, name: str) -> None:
-        """
-        Adds a new role to a streamer
-
-        Args:
-            user_id (int): The user id of the streamer
-            role_id (int): The id of the role
-            name (str): The name of the role
-
-        Returns:
-            bool: True if successful
-
-        Raises:
-            ValueError: If the streamer with user id already exists in datasource
-        """
-        streamer = self.find(user_id)
-        streamer_index = self.get_streamer_index(user_id)
-
-        with open(self.__template_role) as role_template:
-            role = json.load(role_template)
-
-        role['role_id'] = role_id;
-        role['name'] = name;
-        streamer['roles'].append(role);
-        print(streamer)
-
-        contents = self.__load_contents()
-        contents['Streamers'][streamer_index] = streamer
-        self.__save_file(contents)
-
-    def get_streamer_index(self, user_id: int) -> int:
-        contents = self.__load_contents()
-        for index, streamer in enumerate(contents['Streamers']):
-            if streamer['user_id'] == user_id:
-                return index
-
-        raise NotFoundException('Could not find user "{}" to be able to get index'.format(user_id))
 
     def exists(self, user_id: int) -> bool:
         """
@@ -208,11 +212,50 @@ class JsonHandler(DatasourceHandlerInterface):
 
         raise NotFoundException("Could not find streamer with user id '{}'".format(user_id))
 
+    def get_streamer_index(self, user_id: int) -> int:
+        """
+        Find the index key of the passed streamer
+
+        Args:
+            user_id (int): The user id
+
+        Returns:
+            int: The index of the streamer
+
+        Raises:
+            NotFoundException: If the streamer could not be found
+        """
+        contents = self.__load_contents()
+        for index, streamer in enumerate(contents['Streamers']):
+            if streamer['user_id'] == user_id:
+                return index
+
+        raise NotFoundException('Could not find user "{}" to be able to get index'.format(user_id))
+
+    def role_exists(self, roles: list, role_id: int) -> bool:
+        """
+        Check if the role exists by role id
+
+        Args:
+            roles (list): The list of current roles
+            role_id (int): The role id
+
+        Returns:
+            bool: True if found else false
+        """
+        for role in roles:
+            if role['role_id'] == role_id:
+                return True
+
+        return False
+
 
 # Grab our datasource
 json_datasource = JsonHandler()
 
-# Add the base streamers
+###
+# Add the streamers
+###
 try:
     json_datasource.add_streamer(1, 'Gevie')
 except ValueError:
@@ -228,14 +271,41 @@ try:
 except ValueError:
     print('Doggey already exists in the whitelist')
 
-# Add Roles to Streamer A
-json_datasource.add_role_to_streamer(1, 1, 'Dead by Daylight')
-json_datasource.add_role_to_streamer(1, 2, 'Tabletop Simulator')
-json_datasource.add_role_to_streamer(1, 3, 'Stardew Valley')
+###
+# Add Roles to Gevie
+###
+try:
+    json_datasource.add_role_to_streamer(1, 1, 'Dead by Daylight')
+except ValueError:
+    print('Gevie already has role Dead by Daylight')
 
-# Add Roles to Streamer B
-json_datasource.add_role_to_streamer(2, 3, 'Stardew Valley')
+try:
+    json_datasource.add_role_to_streamer(1, 2, 'Tabletop Simulator')
+except ValueError:
+    print('Gevie already has role Tabletop Simulator')
 
-# Add Roles to Streamer C
-json_datasource.add_role_to_streamer(3, 1, 'Dead by Daylight')
-json_datasource.add_role_to_streamer(3, 2, 'Tabletop Simulator')
+try:
+    json_datasource.add_role_to_streamer(1, 3, 'Stardew Valley')
+except ValueError:
+    print('Gevie already has role Stardew Valley')
+
+###
+# Add Roles to Kimiko
+###
+try:
+    json_datasource.add_role_to_streamer(2, 3, 'Stardew Valley')
+except ValueError:
+    print('Kimiko already has role Stardew Valley')
+
+###
+# Add Roles to Doggey
+###
+try:
+    json_datasource.add_role_to_streamer(3, 1, 'Dead by Daylight')
+except ValueError:
+    print('Doggey already has role Dead by Daylight')
+
+try:
+    json_datasource.add_role_to_streamer(3, 2, 'Tabletop Simulator')
+except ValueError:
+    print('Doggey already has role Tabletop Simulator')
