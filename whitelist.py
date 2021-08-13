@@ -15,17 +15,20 @@ class NotFoundException(Exception):
 
 class DatasourceHandlerInterface(ABC):
     @abstractmethod
-    def add_streamer(self, user_id: int, username: str):
+    def add_streamer(self, user_id: int, username: str) -> None:
         pass
 
     @abstractmethod
-    def add_role_to_streamer(self, streamer, role_id: int, name: str):
+    def add_role_to_streamer(self, user_id: int, role_id: int, name: str) -> None:
         pass
 
 
 class JsonHandler(DatasourceHandlerInterface):
     """
     A class used to handle our whitelist json datasource
+
+    We can add and remove streamers from the whitelist
+    We can also add and remove roles assigned to a streamer in the whitelist
     """
 
     def __init__(self):
@@ -101,10 +104,10 @@ class JsonHandler(DatasourceHandlerInterface):
         print(contents)
 
         datasource_file = open(self.__datasource, "w")
-        json.dump(contents, datasource_file, ensure_ascii=False, sort_keys=True, indent='\t', separators=(',', ': '))
+        json.dump(contents, datasource_file, ensure_ascii=False, indent='\t', separators=(',', ': '))
         datasource_file.close()
 
-    def add_streamer(self, user_id: int, username: str) -> bool:
+    def add_streamer(self, user_id: int, username: str) -> None:
         """
         Adds a new streamer to the datasource
 
@@ -122,8 +125,6 @@ class JsonHandler(DatasourceHandlerInterface):
             raise ValueError('Cannot add user "{}" as they already exist'.format(user_id))
 
         contents = self.__load_contents()
-        print(contents)
-
         with open(self.__template_streamer) as streamer_template:
             streamer = json.load(streamer_template)
 
@@ -132,10 +133,43 @@ class JsonHandler(DatasourceHandlerInterface):
         contents['Streamers'].append(streamer)
         self.__save_file(contents)
 
-        return True
+    def add_role_to_streamer(self, user_id: int, role_id: int, name: str) -> None:
+        """
+        Adds a new role to a streamer
 
-    def add_role_to_streamer(self, streamer, role_id: int, name: str) -> bool:
-        pass
+        Args:
+            user_id (int): The user id of the streamer
+            role_id (int): The id of the role
+            name (str): The name of the role
+
+        Returns:
+            bool: True if successful
+
+        Raises:
+            ValueError: If the streamer with user id already exists in datasource
+        """
+        streamer = self.find(user_id)
+        streamer_index = self.get_streamer_index(user_id)
+
+        with open(self.__template_role) as role_template:
+            role = json.load(role_template)
+
+        role['role_id'] = role_id;
+        role['name'] = name;
+        streamer['roles'].append(role);
+        print(streamer)
+
+        contents = self.__load_contents()
+        contents['Streamers'][streamer_index] = streamer
+        self.__save_file(contents)
+
+    def get_streamer_index(self, user_id: int) -> int:
+        contents = self.__load_contents()
+        for index, streamer in enumerate(contents['Streamers']):
+            if streamer['user_id'] == user_id:
+                return index
+
+        raise NotFoundException('Could not find user "{}" to be able to get index'.format(user_id))
 
     def exists(self, user_id: int) -> bool:
         """
@@ -149,7 +183,7 @@ class JsonHandler(DatasourceHandlerInterface):
         """
         contents = self.__load_contents()
         for streamer in contents['Streamers']:
-            if streamer['user_id'] == str(user_id):
+            if streamer['user_id'] == user_id:
                 return True
 
         return False
@@ -169,11 +203,39 @@ class JsonHandler(DatasourceHandlerInterface):
         """
         contents = self.__load_contents()
         for streamer in contents['Streamers']:
-            if streamer['user_id'] == str(user_id):
+            if streamer['user_id'] == user_id:
                 return streamer
 
         raise NotFoundException("Could not find streamer with user id '{}'".format(user_id))
 
 
+# Grab our datasource
 json_datasource = JsonHandler()
-json_datasource.add_streamer(12345, 'Gevie')
+
+# Add the base streamers
+try:
+    json_datasource.add_streamer(1, 'Gevie')
+except ValueError:
+    print('Gevie already exists in the whitelist')
+
+try:
+    json_datasource.add_streamer(2, 'Kimiko')
+except ValueError:
+    print('Kimiko already exists in the whitelist')
+
+try:
+    json_datasource.add_streamer(3, 'Doggey')
+except ValueError:
+    print('Doggey already exists in the whitelist')
+
+# Add Roles to Streamer A
+json_datasource.add_role_to_streamer(1, 1, 'Dead by Daylight')
+json_datasource.add_role_to_streamer(1, 2, 'Tabletop Simulator')
+json_datasource.add_role_to_streamer(1, 3, 'Stardew Valley')
+
+# Add Roles to Streamer B
+json_datasource.add_role_to_streamer(2, 3, 'Stardew Valley')
+
+# Add Roles to Streamer C
+json_datasource.add_role_to_streamer(3, 1, 'Dead by Daylight')
+json_datasource.add_role_to_streamer(3, 2, 'Tabletop Simulator')
