@@ -22,6 +22,14 @@ class DatasourceHandlerInterface(ABC):
         pass
 
     @abstractmethod
+    def delete_role_from_streamer(self, user_id: int, role_id: int) -> None:
+        pass
+
+    @abstractmethod
+    def delete_streamer(self, user_id: int) -> None:
+        pass
+
+    @abstractmethod
     def exists(self, user_id: int) -> bool:
         pass
 
@@ -112,8 +120,6 @@ class JsonHandler(DatasourceHandlerInterface):
             contents (dict): The new file contents
         """
 
-        print(contents)
-
         datasource_file = open(self.__datasource, "w")
         json.dump(contents, datasource_file, ensure_ascii=False, indent='\t', separators=(',', ': '))
         datasource_file.close()
@@ -175,6 +181,54 @@ class JsonHandler(DatasourceHandlerInterface):
         contents['Streamers'].append(streamer)
         self.__save_file(contents)
 
+    def delete_role_from_streamer(self, user_id: int, role_id: int) -> None:
+        """
+        Deletes a role from a user / streamer
+
+        Args:
+            user_id (int): The user id
+            role_id (int): The role id
+
+        Returns:
+            None
+
+        Raises:
+            NotFoundException: If the role does not exist on the user
+        """
+        streamer = self.find(user_id)
+        if not (self.role_exists(streamer['roles'], role_id)):
+            raise NotFoundException('Cannot remove role {} from user {} as it does not exist'.format(role_id, user_id))
+
+        role_index = self.get_role_index(streamer['roles'], role_id)
+        streamer['roles'].pop(role_index)
+
+        contents = self.__load_contents()
+        streamer_index = self.get_streamer_index(user_id)
+        contents['Streamers'][streamer_index] = streamer
+
+        self.__save_file(contents)
+
+    def delete_streamer(self, user_id: int) -> None:
+        """
+        Deletes a streamer from the whitelist datasource
+
+        Args:
+            user_id (int): The user id
+
+        Returns:
+            None
+
+        Raises:
+            NotFoundException: If the user cannot be found
+        """
+        if not (self.exists(user_id)):
+            raise NotFoundException('Cannot find user with id {} for deletion'.format(user_id))
+
+        contents = self.__load_contents()
+        streamer_index = self.get_streamer_index(user_id)
+        contents['Streamers'].pop(streamer_index)
+        self.__save_file(contents)
+
     def exists(self, user_id: int) -> bool:
         """
         Check if the users exists by user id
@@ -211,6 +265,27 @@ class JsonHandler(DatasourceHandlerInterface):
                 return streamer
 
         raise NotFoundException("Could not find streamer with user id '{}'".format(user_id))
+
+    def get_role_index(self, roles: list, role_id: int) -> int:
+        """
+        Find the index key of the passed role_id from roles list
+
+        Args:
+            roles (list): The list of roles to check
+            role_id (int): The role id
+
+        Returns:
+            int: The index of the role
+
+        Raises:
+            NotFoundException: If the role could not be found
+        """
+
+        for index, role in enumerate(roles):
+            if role['role_id'] == role_id:
+                return index
+
+        raise NotFoundException('Could not find role "{}" to be able to get index'.format(role_id))
 
     def get_streamer_index(self, user_id: int) -> int:
         """
@@ -309,3 +384,15 @@ try:
     json_datasource.add_role_to_streamer(3, 2, 'Tabletop Simulator')
 except ValueError:
     print('Doggey already has role Tabletop Simulator')
+
+
+##
+# Delete Roles from Gevie
+##
+json_datasource.delete_role_from_streamer(1, 3)
+json_datasource.delete_role_from_streamer(1, 1)
+
+##
+# Delete Doggey
+##
+json_datasource.delete_streamer(3)
