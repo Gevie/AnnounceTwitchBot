@@ -1,13 +1,22 @@
 import discord
-from discord.utils import get
 from discord.ext import commands
-
+from discord.utils import get
 from streamer import StreamerMapper
 from whitelist import JsonDatasourceHandler, NotFoundException
 
 
 class CommandsCog(commands.Cog):
+    """
+    Commands which enable an admin to maintain the streamer whitelist
+    """
+
     def __init__(self, bot):
+        """
+        Initialize the command cog
+
+        Args:
+            bot: The discord bot
+        """
         self.bot = bot
         self.datasource = JsonDatasourceHandler()
 
@@ -48,7 +57,18 @@ class CommandsCog(commands.Cog):
     @commands.command(name='remove_streamer', pass_context=True)
     @commands.has_permissions(administrator=True)
     @commands.guild_only()
-    async def remove_streamer(self, ctx, user: discord.User):
+    async def remove_streamer(self, ctx, user: discord.User) -> None:
+        """
+        Remove a streamer from the datasource / whitelist
+
+        Args:
+            ctx: Represents the :class:`.Context`
+            user (discord.User): The user to remove
+
+        Returns:
+            None
+        """
+
         try:
             self.datasource.delete_streamer(user.id)
         except NotFoundException:
@@ -60,7 +80,19 @@ class CommandsCog(commands.Cog):
     @commands.command(name='add_roles', pass_context=True)
     @commands.has_permissions(administrator=True)
     @commands.guild_only()
-    async def add_roles(self, ctx, user: discord.User, *roles: discord.Role):
+    async def add_roles(self, ctx, user: discord.User, *roles: discord.Role) -> None:
+        """
+        Add roles to an existing streamer
+
+        Args:
+            ctx: Represents the :class:`.Context`
+            user (discord.User): The streamer
+            *roles (discord.Role): A list of discord roles
+
+        Returns:
+            None
+        """
+
         if len(roles) < 1:
             await ctx.send("You must specify at least one role to add to the streamer")
             return None
@@ -74,7 +106,19 @@ class CommandsCog(commands.Cog):
     @commands.command(name='remove_roles', pass_context=True)
     @commands.has_permissions(administrator=True)
     @commands.guild_only()
-    async def remove_roles(self, ctx, user: discord.User, *roles: discord.Role):
+    async def remove_roles(self, ctx, user: discord.User, *roles: discord.Role) -> None:
+        """
+        Remove roles from a streamer
+
+        Args:
+            ctx: Represents the :class:`.Context`
+            user (discord.User): The discord user
+            *roles (discord.Role): The list of roles to remove
+
+        Returns:
+            None
+        """
+
         if len(roles) < 1:
             await ctx.send("You must specify at least one role to remove from the streamer")
             return None
@@ -88,17 +132,29 @@ class CommandsCog(commands.Cog):
     @commands.command(name='list_streamers', pass_context=True)
     @commands.has_permissions(administrator=True)
     @commands.guild_only()
-    async def list_streamers(self, ctx):
+    async def list_streamers(self, ctx) -> None:
+        """
+        Produces a list of all the streamers and their associated roles
+
+        Args:
+            ctx: Represents the :class:`.Context`
+
+        Returns:
+            None
+        """
+
         streamerMapper = StreamerMapper()
         streamers = streamerMapper.map()
 
         for idx, streamer in enumerate(streamers):
             user = await self.bot.fetch_user(streamer.get_id())
-            print(user)
-            embed = discord.Embed(title=streamer.get_username(), description=f"You can follow {user.mention} on twitch at https://twitch.tv/{streamer.get_username()}")
+            embed = discord.Embed(
+                title=streamer.get_username(),
+                description=f"You can follow {user.mention} on twitch at https://twitch.tv/{streamer.get_username()}"
+            )
             embed.set_thumbnail(url=user.avatar_url)
-
             role_list = "Subscribe to the following roles to be alerted when they're next live:\n "
+
             for role in streamer.get_roles():
                 roleTag = get(ctx.guild.roles, id=role.get_id())
                 role_list += f"{roleTag.mention}, "
