@@ -29,6 +29,15 @@ class CommandsCog(commands.Cog):
 
             await ctx.send(f"{role.mention} has been added to {user.mention} for twitch.tv/{username}")
 
+    async def remove_streamer(self, ctx, user: discord.User):
+        pass
+
+    async def add_roles(self, ctx, user: discord.User, *roles: discord.Role):
+        pass
+
+    async def remove_roles(self, ctx, user: discord.User, *roles: discord.Role):
+        pass
+
 
 def setup(bot):
     bot.add_cog(CommandsCog(bot))
