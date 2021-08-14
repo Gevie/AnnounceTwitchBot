@@ -42,7 +42,7 @@ class DatasourceHandlerInterface(ABC):
         pass
 
 
-class JsonHandler(DatasourceHandlerInterface):
+class JsonDatasourceHandler(DatasourceHandlerInterface):
     """
     A class used to handle our whitelist json datasource
 
@@ -146,9 +146,9 @@ class JsonHandler(DatasourceHandlerInterface):
         with open(self.__template_role) as role_template:
             role = json.load(role_template)
 
-        role['role_id'] = role_id;
-        role['name'] = name;
-        streamer['roles'].append(role);
+        role['role_id'] = role_id
+        role['name'] = name
+        streamer['roles'].append(role)
 
         contents = self.__load_contents()
         streamer_index = self.get_streamer_index(user_id)
@@ -323,76 +323,3 @@ class JsonHandler(DatasourceHandlerInterface):
                 return True
 
         return False
-
-
-# Grab our datasource
-json_datasource = JsonHandler()
-
-###
-# Add the streamers
-###
-try:
-    json_datasource.add_streamer(1, 'Gevie')
-except ValueError:
-    print('Gevie already exists in the whitelist')
-
-try:
-    json_datasource.add_streamer(2, 'Kimiko')
-except ValueError:
-    print('Kimiko already exists in the whitelist')
-
-try:
-    json_datasource.add_streamer(3, 'Doggey')
-except ValueError:
-    print('Doggey already exists in the whitelist')
-
-###
-# Add Roles to Gevie
-###
-try:
-    json_datasource.add_role_to_streamer(1, 1, 'Dead by Daylight')
-except ValueError:
-    print('Gevie already has role Dead by Daylight')
-
-try:
-    json_datasource.add_role_to_streamer(1, 2, 'Tabletop Simulator')
-except ValueError:
-    print('Gevie already has role Tabletop Simulator')
-
-try:
-    json_datasource.add_role_to_streamer(1, 3, 'Stardew Valley')
-except ValueError:
-    print('Gevie already has role Stardew Valley')
-
-###
-# Add Roles to Kimiko
-###
-try:
-    json_datasource.add_role_to_streamer(2, 3, 'Stardew Valley')
-except ValueError:
-    print('Kimiko already has role Stardew Valley')
-
-###
-# Add Roles to Doggey
-###
-try:
-    json_datasource.add_role_to_streamer(3, 1, 'Dead by Daylight')
-except ValueError:
-    print('Doggey already has role Dead by Daylight')
-
-try:
-    json_datasource.add_role_to_streamer(3, 2, 'Tabletop Simulator')
-except ValueError:
-    print('Doggey already has role Tabletop Simulator')
-
-
-##
-# Delete Roles from Gevie
-##
-json_datasource.delete_role_from_streamer(1, 3)
-json_datasource.delete_role_from_streamer(1, 1)
-
-##
-# Delete Doggey
-##
-json_datasource.delete_streamer(3)
