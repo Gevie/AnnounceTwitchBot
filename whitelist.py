@@ -139,6 +139,7 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
         Raises:
             ValueError: If the streamer already has the role which we are trying to add
         """
+
         streamer = self.find(user_id)
         if self.role_exists(streamer['roles'], role_id):
             raise ValueError('Cannot add role id {} to user {} as it already exists'.format(role_id, user_id))
@@ -169,6 +170,7 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
         Raises:
             ValueError: If the streamer with user id already exists in datasource
         """
+
         if self.exists(user_id):
             raise ValueError('Cannot add user "{}" as they already exist'.format(user_id))
 
@@ -195,6 +197,7 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
         Raises:
             NotFoundException: If the role does not exist on the user
         """
+
         streamer = self.find(user_id)
         if not (self.role_exists(streamer['roles'], role_id)):
             raise NotFoundException('Cannot remove role {} from user {} as it does not exist'.format(role_id, user_id))
@@ -221,6 +224,7 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
         Raises:
             NotFoundException: If the user cannot be found
         """
+
         if not (self.exists(user_id)):
             raise NotFoundException('Cannot find user with id {} for deletion'.format(user_id))
 
@@ -239,6 +243,7 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
         Returns:
             bool: True if found else false
         """
+
         contents = self.__load_contents()
         for streamer in contents['Streamers']:
             if streamer['user_id'] == user_id:
@@ -259,6 +264,7 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
         Raises:
             NotFoundException: If the streamer requested could not be found
         """
+
         contents = self.__load_contents()
         for streamer in contents['Streamers']:
             if streamer['user_id'] == user_id:
@@ -300,6 +306,7 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
         Raises:
             NotFoundException: If the streamer could not be found
         """
+
         contents = self.__load_contents()
         for index, streamer in enumerate(contents['Streamers']):
             if streamer['user_id'] == user_id:
@@ -318,6 +325,7 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
         Returns:
             bool: True if found else false
         """
+
         for role in roles:
             if role['role_id'] == role_id:
                 return True
