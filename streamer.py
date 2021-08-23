@@ -1,11 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from dotenv import load_dotenv
-from whitelist import JsonDatasourceHandler, NotFoundException
-import json
-import os
-
-load_dotenv()
+from whitelist import JsonDatasourceHandler
 
 
 class StreamerInterface(ABC):
