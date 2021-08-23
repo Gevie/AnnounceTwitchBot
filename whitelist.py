@@ -314,6 +314,9 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
 
         raise NotFoundException('Could not find user "{}" to be able to get index'.format(user_id))
 
+    def get_contents(self) -> list:
+        return self.__load_contents()
+
     def role_exists(self, roles: list, role_id: int) -> bool:
         """
         Check if the role exists by role id

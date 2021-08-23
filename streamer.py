@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from dotenv import load_dotenv
+from whitelist import JsonDatasourceHandler, NotFoundException
 import json
 import os
 
@@ -108,16 +109,11 @@ class StreamerMapper(MapperInterface):
             list: A list of streamer objects
         """
 
-        STREAMER_DATASOURCE = os.getenv('STREAMER_DATASOURCE')
+        data = JsonDatasourceHandler().get_contents()
 
         streamers = []
-        with open(STREAMER_DATASOURCE) as streamers_file:
-            data = json.load(streamers_file)
-
-            for streamer in data['Streamers']:
-                role_mapper = RoleMapper()
-                roles = role_mapper.map(streamer['roles'])
-
-                streamers.append(Streamer(int(streamer['user_id']), streamer['username'], roles))
+        for index, streamer in enumerate(data['Streamers']):
+            roles = RoleMapper().map(streamer['roles'])
+            streamers.append(Streamer(int(streamer['user_id']), streamer['username'], roles))
 
         return streamers
