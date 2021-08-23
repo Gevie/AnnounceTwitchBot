@@ -147,16 +147,16 @@ class CommandsCog(commands.Cog):
         streamers = streamerMapper.map()
 
         for idx, streamer in enumerate(streamers):
-            user = await self.bot.fetch_user(streamer.get_id())
+            user = await self.bot.fetch_user(streamer.id)
             embed = discord.Embed(
-                title=streamer.get_username(),
-                description=f"You can follow {user.mention} on twitch at https://twitch.tv/{streamer.get_username()}"
+                title=streamer.username,
+                description=f"You can follow {user.mention} on twitch at https://twitch.tv/{streamer.username}"
             )
             embed.set_thumbnail(url=user.avatar_url)
             role_list = "Subscribe to the following roles to be alerted when they're next live:\n "
 
-            for role in streamer.get_roles():
-                roleTag = get(ctx.guild.roles, id=role.get_id())
+            for role in streamer.roles:
+                roleTag = get(ctx.guild.roles, id=role.id)
                 role_list += f"{roleTag.mention}, "
 
             embed.add_field(name="Roles", value=role_list)

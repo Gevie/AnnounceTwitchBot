@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from dotenv import load_dotenv
 import json
 import os
@@ -6,120 +7,56 @@ import os
 load_dotenv()
 
 
-class RoleInterface(ABC):
-    @abstractmethod
-    def get_id(self) -> int:
-        pass
+class StreamerInterface(ABC):
+    """
+    The streamer interface
+    """
 
     @abstractmethod
-    def get_name(self) -> str:
-        pass
+    def is_match(self, username: str) -> bool:
+        """
+        Checks if the username matches the streamer
+
+        Args:
+            username (str): The username to check against
+
+        Returns
+            bool: True if matched else false
+        """
 
 
-class Role(RoleInterface):
+class MapperInterface(ABC):
+    """
+    The mapper interface
+    """
+
+    @abstractmethod
+    def map(self) -> list:
+        """
+        Map the data from external source to objects
+
+        Returns:
+            list: The list of mapped objects
+        """
+
+
+@dataclass
+class Role:
     """
     Holds an instance of a role
     """
-
-    def __init__(self, role_id: int, name: str):
-        """
-        Initialize the role
-
-        Args:
-            role_id (int): The id of the role
-            name (str): The name of the role
-        """
-
-        self._id = role_id
-        self._name = name
-
-    def get_id(self) -> int:
-        """
-        Get the role id
-
-        Returns:
-            int: The role id
-        """
-
-        return self._id
-
-    def get_name(self) -> str:
-        """
-        Get the role name
-
-        Returns:
-            str: The role name
-        """
-
-        return self._name
+    id: int
+    name: str
 
 
-class StreamerInterface(ABC):
-    @abstractmethod
-    def get_id(self) -> int:
-        pass
-
-    @abstractmethod
-    def get_username(self) -> str:
-        pass
-
-    @abstractmethod
-    def get_roles(self) -> list:
-        pass
-
-    @abstractmethod
-    def is_match(self, username) -> bool:
-        pass
-
-
+@dataclass
 class Streamer(StreamerInterface):
     """
     Holds an instance of a streamer
     """
-
-    def __init__(self, user_id: int, username: str, roles: list):
-        """
-        Initialize the streamer
-
-        Args:
-            user_id (int): The id of the user
-            username (str): The twitch username of the user
-            roles (list): A list of role objects
-        """
-
-        self._id = user_id
-        self._username = username
-        self._roles = roles
-
-    def get_id(self) -> int:
-        """
-        Get the id of the streamer
-
-        Returns:
-            int: The streamer id
-        """
-
-        return self._id
-
-    def get_username(self) -> str:
-        """
-        Get the twitch username of the streamer
-
-        Returns:
-            str: The streamer username
-        """
-
-        return self._username
-
-    def get_roles(self) -> list:
-        """
-        Get the roles for the streamer
-
-        Returns:
-            list: A list of role objects
-        """
-
-        return self._roles
+    id: int
+    username: str
+    roles: list
 
     def is_match(self, username) -> bool:
         """
@@ -132,13 +69,7 @@ class Streamer(StreamerInterface):
             bool: True if match, else false
         """
 
-        return self._username == username
-
-
-class MapperInterface(ABC):
-    @abstractmethod
-    def map(self) -> list:
-        pass
+        return self.username == username
 
 
 class RoleMapper(MapperInterface):

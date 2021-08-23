@@ -15,31 +15,31 @@ class NotFoundException(Exception):
 class DatasourceHandlerInterface(ABC):
     @abstractmethod
     def add_role_to_streamer(self, user_id: int, role_id: int, name: str) -> None:
-        pass
+        """Adds a role to a streamer in the whitelist"""
 
     @abstractmethod
     def add_streamer(self, user_id: int, username: str) -> None:
-        pass
+        """Add a streamer to the whitelist"""
 
     @abstractmethod
     def delete_role_from_streamer(self, user_id: int, role_id: int) -> None:
-        pass
+        """Delete a role from a streamer in the whitelist"""
 
     @abstractmethod
     def delete_streamer(self, user_id: int) -> None:
-        pass
+        """Delete a streamer from the whitelist"""
 
     @abstractmethod
     def exists(self, user_id: int) -> bool:
-        pass
+        """Check if a streamer exists in whitelist by user id"""
 
     @abstractmethod
     def find(self, user_id: int) -> list:
-        pass
+        """Find a streamer in te whitelist via user id"""
 
     @abstractmethod
     def role_exists(self, roles: list, role_id: int) -> bool:
-        pass
+        """Check if a role exists against a streamer by id and role list"""
 
 
 class JsonDatasourceHandler(DatasourceHandlerInterface):
