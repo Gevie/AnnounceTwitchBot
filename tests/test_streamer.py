@@ -8,12 +8,12 @@ class TestStreamer(unittest.TestCase):
         streamer = Streamer(1, 'Test Streamer', [])
 
         # When
-        successfulMatch = streamer.is_match('Test Streamer')
-        failedMatch = streamer.is_match('Failed Streamer')
+        successful_match = streamer.is_match('Test Streamer')
+        failed_match = streamer.is_match('Failed Streamer')
 
         # Then
-        self.assertTrue(successfulMatch)
-        self.assertFalse(failedMatch)
+        self.assertTrue(successful_match)
+        self.assertFalse(failed_match)
 
 
 class TestStreamerMapper(unittest.TestCase):
