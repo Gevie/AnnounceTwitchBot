@@ -59,6 +59,15 @@ class RestResponse(ResponseInterface):
     def __init__(self, response) -> None:
         pass
 
+    def body(self) -> json:
+        pass
+
+    def error(self) -> dict:
+        pass
+
+    def is_successful(self) -> bool:
+        pass
+
 
 class RequestInterface(ABC):
     """
@@ -77,7 +86,7 @@ class RequestInterface(ABC):
         """
 
     @abstractmethod
-    def set_headers(self, headers: dict) -> None:
+    def __set_headers(self, headers: dict) -> None:
         """
         Set the headers for the request
 
@@ -89,7 +98,7 @@ class RequestInterface(ABC):
         """
 
 
-class Request(RequestInterface):
+class RestRequest(RequestInterface):
     """
     The request
     """
@@ -153,7 +162,7 @@ class Request(RequestInterface):
 
         self.__url = f"{url}/{self.__endpoint}?{data}"
 
-    def submit(self):
+    def submit(self) -> ResponseInterface:
         """
         Submit the request
 
