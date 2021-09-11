@@ -27,7 +27,7 @@ class MapperInterface(ABC):
     """
 
     @abstractmethod
-    def map(self) -> list:
+    def map(self, datasource: list) -> list:
         """
         Map the data from external source to objects
 
@@ -96,7 +96,7 @@ class StreamerMapper(MapperInterface):
     Maps streamers from the datasource into objects
     """
 
-    def map(self) -> list:
+    def map(self, datasource: list) -> list:
         """
         Map streamers from the datasource into objects
 
