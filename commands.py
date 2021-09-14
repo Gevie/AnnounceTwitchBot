@@ -143,7 +143,7 @@ class CommandsCog(commands.Cog):
             None
         """
 
-        streamerMapper = StreamerMapper()
+        streamerMapper = StreamerMapper(JsonDatasourceHandler)
         streamers = streamerMapper.map()
 
         for idx, streamer in enumerate(streamers):

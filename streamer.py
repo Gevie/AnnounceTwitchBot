@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from whitelist import JsonDatasourceHandler
+from whitelist import DatasourceHandlerInterface
 
 
 class StreamerInterface(ABC):
@@ -27,7 +27,7 @@ class MapperInterface(ABC):
     """
 
     @abstractmethod
-    def map(self, datasource: list) -> list:
+    def map(self) -> list:
         """
         Map the data from external source to objects
 
@@ -73,20 +73,26 @@ class RoleMapper(MapperInterface):
     Maps a list of roles into role objects
     """
 
-    def map(self, datasource: list) -> list:
+    def __init__(self, datasource: list):
+        """Initialize the class"""
+
+        self.datasource = datasource
+
+    def map(self) -> list:
         """
         Map the roles from datasource to a list of objects
-
-        Args:
-            datasource (list): The roles from datasource
 
         Returns:
             list: The list of role objects
         """
 
         roles = []
-        for role in datasource:
-            roles.append(Role(int(role['role_id']), role['name']))
+
+        for role in self.datasource:
+            roles.append(Role(
+                int(role['role_id']),
+                role['name']
+            ))
 
         return roles
 
@@ -96,7 +102,17 @@ class StreamerMapper(MapperInterface):
     Maps streamers from the datasource into objects
     """
 
-    def map(self, datasource: list) -> list:
+    def __init__(self, datasource_handler: DatasourceHandlerInterface):
+        """
+        Initialize the class
+
+        Args:
+            datasource_handler (DatasourceHandlerInterface): The datasource handler to use
+        """
+
+        self.datasource_handler = datasource_handler
+
+    def map(self) -> list:
         """
         Map streamers from the datasource into objects
 
@@ -104,11 +120,15 @@ class StreamerMapper(MapperInterface):
             list: A list of streamer objects
         """
 
-        data = JsonDatasourceHandler().get_contents()
+        data = self.datasource_handler.get_contents()
 
         streamers = []
         for index, streamer in enumerate(data['Streamers']):
-            roles = RoleMapper().map(streamer['roles'])
-            streamers.append(Streamer(int(streamer['user_id']), streamer['username'], roles))
+            roles = RoleMapper(streamer['roles']).map()
+            streamers.append(Streamer(
+                int(streamer['user_id']),
+                streamer['username'],
+                roles
+            ))
 
         return streamers

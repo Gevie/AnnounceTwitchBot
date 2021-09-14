@@ -1,4 +1,5 @@
 from streamer import RoleMapper, Streamer, StreamerMapper
+from unittest import mock
 import unittest
 
 
@@ -20,6 +21,8 @@ class TestStreamerMapper(unittest.TestCase):
     def test_map(self):
         # Give
         streamer_mapper = StreamerMapper()
+
+        with patch('')
 
         # TODO: Learn how to mock so I can test this
 
