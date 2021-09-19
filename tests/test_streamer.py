@@ -41,7 +41,7 @@ class TestStreamer(unittest.TestCase):
         ])
 
         # Then
-        self.assertTrue(isinstance(streamer, Streamer))
+        self.assertTrue(isinstance(streamer, StreamerInterface))
         self.assertEqual(streamer.id, 1)
         self.assertEqual(streamer.username, 'Test')
 
