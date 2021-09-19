@@ -277,12 +277,12 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
 
         raise NotFoundException("Could not find streamer with user id '{}'".format(user_id))
 
-    def get_role_index(self, roles: dict, role_id: int) -> int:
+    def get_role_index(self, roles: list, role_id: int) -> int:
         """
         Find the index key of the passed role_id from roles dict
 
         Args:
-            roles (dict): The dict of roles to check
+            roles (list): The list of roles to check
             role_id (int): The role id
 
         Returns:
@@ -329,12 +329,12 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
 
         return self.__load_contents()
 
-    def role_exists(self, roles: dict, role_id: int) -> bool:
+    def role_exists(self, roles: list, role_id: int) -> bool:
         """
         Check if the role exists by role id
 
         Args:
-            roles (dict): The dict of current roles
+            roles (list): The dict of current roles
             role_id (int): The role id
 
         Returns:

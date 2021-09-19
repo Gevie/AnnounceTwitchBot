@@ -225,7 +225,7 @@ class TestJsonDatasourceHandler(unittest.TestCase):
         """
 
         # Give
-        streamer = {
+        old_streamer = {
             "Streamers": [
                 {
                     "user_id": 1,
@@ -249,7 +249,7 @@ class TestJsonDatasourceHandler(unittest.TestCase):
         json_datasource_handler.exists.return_value = True
 
         json_datasource_handler._JsonDatasourceHandler__load_contents = Mock()
-        json_datasource_handler._JsonDatasourceHandler__load_contents.return_value = streamer
+        json_datasource_handler._JsonDatasourceHandler__load_contents.return_value = old_streamer
 
         json_datasource_handler.get_streamer_index = Mock()
         json_datasource_handler.get_streamer_index.return_value = 0
@@ -261,3 +261,198 @@ class TestJsonDatasourceHandler(unittest.TestCase):
 
         # Then
         json_datasource_handler._JsonDatasourceHandler__save_file.assert_called_with(new_streamer)
+
+    def test_delete_streamer_failure(self):
+        """
+        Test the ability to delete a streamer with a failed response
+
+        Returns:
+            None
+        """
+
+        # Give
+        json_datasource_handler = JsonDatasourceHandler()
+        json_datasource_handler.exists = Mock()
+        json_datasource_handler.exists.return_value = False
+
+        # When
+        with self.assertRaises(NotFoundException):
+            json_datasource_handler.delete_streamer(1)
+
+    def test_exists(self):
+        """
+        Test the ability to check if a streamer exists
+
+        Returns:
+            None
+        """
+
+        # Give
+        json_datasource_handler = JsonDatasourceHandler()
+
+        contents = {
+            "Streamers": [
+                {
+                    "user_id": 1,
+                    "username": "HelloWorld",
+                    "roles": []
+                }
+            ]
+        }
+
+        json_datasource_handler._JsonDatasourceHandler__load_contents = Mock()
+        json_datasource_handler._JsonDatasourceHandler__load_contents.return_value = contents
+
+        # When
+        successful_response = json_datasource_handler.exists(1)
+        failed_response = json_datasource_handler.exists(2)
+
+        # Then
+        self.assertTrue(successful_response)
+        self.assertFalse(failed_response)
+
+    def test_find(self):
+        """
+        Test the ability to find a streamer by user id successfully
+
+        Returns:
+            None
+        """
+
+        # Give
+        json_datasource_handler = JsonDatasourceHandler()
+
+        contents = {
+            "Streamers": [
+                {
+                    "user_id": 1,
+                    "username": "HelloWorld",
+                    "roles": []
+                }
+            ]
+        }
+
+        streamer = {
+            "user_id": 1,
+            "username": "HelloWorld",
+            "roles": []
+        }
+
+        json_datasource_handler._JsonDatasourceHandler__load_contents = Mock()
+        json_datasource_handler._JsonDatasourceHandler__load_contents.return_value = contents
+
+        # When
+        success = json_datasource_handler.find(1)
+        with self.assertRaises(NotFoundException):
+            json_datasource_handler.find(2)
+
+        # Then
+        self.assertEqual(streamer, success)
+
+    def get_role_index_success(self):
+        """
+        Test the ability to check if a role index exists
+
+        Returns:
+            None
+        """
+
+        # Give
+        json_datasource_handler = JsonDatasourceHandler()
+
+        roles = [
+            {
+                "role_id": 1,
+                "name": "UnitTest"
+            }
+        ]
+
+        # When
+        successful_response = json_datasource_handler.get_role_index(roles, 1)
+        with self.assertRaises(NotFoundException):
+            json_datasource_handler.get_role_index(roles, 2)
+
+        # Then
+        self.assertEqual(successful_response, 1)
+
+    def get_streamer_index_success(self):
+        """
+        Test the ability to check if a streamer index exists
+
+        Returns:
+            None
+        """
+
+        # Give
+        json_datasource_handler = JsonDatasourceHandler()
+
+        streamers = {
+            "Streamers": [
+                {
+                    "user_id": 1,
+                    "username": "HelloWorld",
+                    "roles": []
+                }
+            ]
+        }
+
+        json_datasource_handler._JsonDatasourceHandler__load_contents = Mock()
+        json_datasource_handler._JsonDatasourceHandler__load_contents.return_value = streamers
+
+        # When
+        successful_response = json_datasource_handler.get_streamer_index(1)
+        with self.assertRaises(NotFoundException):
+            json_datasource_handler.get_role_index(2)
+
+        # Then
+        self.assertEqual(successful_response, 1)
+
+    def test_get_contents(self):
+        """
+        Test the ability to load contents
+
+        Returns:
+            None
+        """
+
+        # Give
+        json_datasource_handler = JsonDatasourceHandler()
+
+        contents = {
+            "Streamers": [
+                {
+                    "user_id": 1,
+                    "username": "HelloWorld",
+                    "roles": []
+                }
+            ]
+        }
+
+        json_datasource_handler._JsonDatasourceHandler__load_contents = Mock()
+        json_datasource_handler._JsonDatasourceHandler__load_contents.return_value = contents
+
+        # When
+        response = json_datasource_handler.get_contents()
+
+        # Then
+        self.assertEqual(response, contents)
+
+    def role_exists(self):
+
+        # Give
+        json_datasource_handler = JsonDatasourceHandler()
+
+        roles = roles = [
+            {
+                "role_id": 1,
+                "name": "UnitTest"
+            }
+        ]
+
+        # When
+        successful_response = json_datasource_handler.role_exists(roles, 1)
+        failed_response = json_datasource_handler.role_exists(roles, 2)
+
+        # Then
+        self.assertTrue(successful_response)
+        self.assertFalse(failed_response)
