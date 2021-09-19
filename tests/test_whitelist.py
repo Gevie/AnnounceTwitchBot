@@ -22,7 +22,7 @@ class TestJsonDatasourceHandler(unittest.TestCase):
 
     def test_add_role_to_streamer_success(self):
         """
-        Test the ability to add a role to a streamer with successful response
+        Test the ability to add a role to a streamer with a successful response
 
         Returns:
             None
@@ -82,4 +82,182 @@ class TestJsonDatasourceHandler(unittest.TestCase):
         json_datasource_handler.find.assert_called_with(1)
         json_datasource_handler.role_exists.assert_called_with(old_streamer['roles'], 2)
         json_datasource_handler.get_streamer_index.assert_called_with(1)
+        json_datasource_handler._JsonDatasourceHandler__save_file.assert_called_with(new_streamer)
+
+    def test_add_role_to_streamer_failure(self):
+        """
+        Test the ability to add a role to a streamer with a failed response
+
+        Returns:
+            None
+        """
+
+        # Give
+        json_datasource_handler = JsonDatasourceHandler()
+
+        old_streamer = {
+            "user_id": 1,
+            "username": "HelloWorld",
+            "roles": [
+                {
+                    "role_id": 1,
+                    "name": "UnitTest"
+                }
+            ]
+        }
+
+        json_datasource_handler.find = Mock()
+        json_datasource_handler.find.return_value = old_streamer
+
+        json_datasource_handler.role_exists = Mock()
+        json_datasource_handler.role_exists.return_value = True
+
+        # When
+        with self.assertRaises(ValueError):
+            json_datasource_handler.add_role_to_streamer(1, 1, 'UnitTest')
+
+    def test_delete_role_from_streamer_success(self):
+        """
+        Test the ability to delete a role from a streamer with a successful response
+
+        Returns:
+            None
+        """
+
+        # Give
+        json_datasource_handler = JsonDatasourceHandler()
+
+        old_streamer = {
+            "user_id": 1,
+            "username": "HelloWorld",
+            "roles": [
+                {
+                    "role_id": 1,
+                    "name": "UnitTest"
+                },
+                {
+                    "role_id": 2,
+                    "name": "MockObject"
+                }
+            ]
+        }
+
+        new_streamer = {
+            "Streamers": [
+                {
+                    "user_id": 1,
+                    "username": "HelloWorld",
+                    "roles": [
+                        {
+                            "role_id": 1,
+                            "name": "UnitTest"
+                        }
+                    ]
+                }
+            ]
+        }
+
+        json_datasource_handler.find = Mock()
+        json_datasource_handler.find.return_value = old_streamer
+
+        json_datasource_handler.role_exists = Mock()
+        json_datasource_handler.role_exists.return_value = True
+
+        json_datasource_handler.get_role_index = Mock()
+        json_datasource_handler.get_role_index.return_value = 1
+
+        json_datasource_handler._JsonDatasourceHandler__load_contents = Mock()
+        json_datasource_handler._JsonDatasourceHandler__load_contents.return_value = new_streamer
+
+        json_datasource_handler.get_streamer_index = Mock()
+        json_datasource_handler.get_streamer_index.return_value = 0
+
+        json_datasource_handler._JsonDatasourceHandler__save_file = Mock()
+
+        # When
+        json_datasource_handler.delete_role_from_streamer(1, 2)
+
+        # Then
+        json_datasource_handler.find.assert_called_with(1)
+        json_datasource_handler.role_exists.assert_called_with(old_streamer['roles'], 2)
+        json_datasource_handler.get_role_index.assert_called_with(old_streamer['roles'], 2)
+        json_datasource_handler.get_streamer_index.assert_called_with(1)
+        json_datasource_handler._JsonDatasourceHandler__save_file.assert_called_with(new_streamer)
+
+    def test_delete_role_from_streamer_failure(self):
+        """
+        Test the ability to delete a role from a streamer with a failed response
+
+        Returns:
+            None
+        """
+
+        # Give
+        json_datasource_handler = JsonDatasourceHandler()
+
+        old_streamer = {
+            "user_id": 1,
+            "username": "HelloWorld",
+            "roles": [
+                {
+                    "role_id": 1,
+                    "name": "UnitTest"
+                }
+            ]
+        }
+
+        json_datasource_handler.find = Mock()
+        json_datasource_handler.find.return_value = old_streamer
+
+        json_datasource_handler.role_exists = Mock()
+        json_datasource_handler.role_exists.return_value = False
+
+        # When
+        with self.assertRaises(NotFoundException):
+            json_datasource_handler.delete_role_from_streamer(1, 1)
+
+    def test_delete_streamer_success(self):
+        """
+        Test the ability to delete a streamer with a successful response
+
+        Returns:
+            None
+        """
+
+        # Give
+        streamer = {
+            "Streamers": [
+                {
+                    "user_id": 1,
+                    "username": "HelloWorld",
+                    "roles": [
+                        {
+                            "role_id": 1,
+                            "name": "UnitTest"
+                        }
+                    ]
+                }
+            ]
+        }
+
+        new_streamer = {
+            "Streamers": []
+        }
+
+        json_datasource_handler = JsonDatasourceHandler()
+        json_datasource_handler.exists = Mock()
+        json_datasource_handler.exists.return_value = True
+
+        json_datasource_handler._JsonDatasourceHandler__load_contents = Mock()
+        json_datasource_handler._JsonDatasourceHandler__load_contents.return_value = streamer
+
+        json_datasource_handler.get_streamer_index = Mock()
+        json_datasource_handler.get_streamer_index.return_value = 0
+
+        json_datasource_handler._JsonDatasourceHandler__save_file = Mock()
+
+        # When
+        json_datasource_handler.delete_streamer(1)
+
+        # Then
         json_datasource_handler._JsonDatasourceHandler__save_file.assert_called_with(new_streamer)
