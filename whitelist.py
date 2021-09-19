@@ -76,7 +76,7 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
         """
 
         if self.__exists():
-            raise RuntimeError('Cannot create datasource as it already exists')
+            raise RuntimeError('Cannot create json datasource as it already exists')
 
         with open(self.__template) as template:
             template_json = template.read()

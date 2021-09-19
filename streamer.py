@@ -68,15 +68,12 @@ class Streamer(StreamerInterface):
         return self.username == username
 
 
+@dataclass
 class RoleMapper(MapperInterface):
     """
     Maps a list of roles into role objects
     """
-
-    def __init__(self, datasource: list):
-        """Initialize the class"""
-
-        self.datasource = datasource
+    datasource: list
 
     def map(self) -> list:
         """
@@ -87,30 +84,18 @@ class RoleMapper(MapperInterface):
         """
 
         roles = []
-
         for role in self.datasource:
-            roles.append(Role(
-                int(role['role_id']),
-                role['name']
-            ))
+            roles.append(Role(int(role['role_id']), role['name']))
 
         return roles
 
 
+@dataclass()
 class StreamerMapper(MapperInterface):
     """
     Maps streamers from the datasource into objects
     """
-
-    def __init__(self, datasource_handler: DatasourceHandlerInterface):
-        """
-        Initialize the class
-
-        Args:
-            datasource_handler (DatasourceHandlerInterface): The datasource handler to use
-        """
-
-        self.datasource_handler = datasource_handler
+    datasource_handler: DatasourceHandlerInterface
 
     def map(self) -> list:
         """
@@ -123,14 +108,8 @@ class StreamerMapper(MapperInterface):
         data = self.datasource_handler.get_contents()
 
         streamers = []
-        print(data)
-        print(type(data))
         for index, streamer in enumerate(data['Streamers']):
             roles = RoleMapper(streamer['roles']).map()
-            streamers.append(Streamer(
-                int(streamer['user_id']),
-                streamer['username'],
-                roles
-            ))
+            streamers.append(Streamer(int(streamer['user_id']), streamer['username'], roles))
 
         return streamers
