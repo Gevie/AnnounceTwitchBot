@@ -19,8 +19,8 @@ class TestJsonDatasourceHandler(unittest.TestCase):
 
         # Then
         self.assertTrue(isinstance(json_datasource_handler, DatasourceHandlerInterface))
+        print("\n")
         print(json_datasource_handler._JsonDatasourceHandler__datasource)
-
-
-if __name__ == '__main__':
-    unittest.main()
+        print(json_datasource_handler._JsonDatasourceHandler__template)
+        print(json_datasource_handler._JsonDatasourceHandler__template_streamer)
+        print(json_datasource_handler._JsonDatasourceHandler__template_role)

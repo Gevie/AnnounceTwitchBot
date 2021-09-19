@@ -193,7 +193,3 @@ class TestRoleMapper(unittest.TestCase):
         self.assertTrue(isinstance(mapped_roles[1], Role))
         self.assertEqual(mapped_roles[1].id, 2)
         self.assertEqual(mapped_roles[1].name, 'MockObject')
-
-
-if __name__ == '__main__':
-    unittest.main()
