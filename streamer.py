@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from whitelist import JsonDatasourceHandler
+from whitelist import DatasourceHandlerInterface
 
 
 class StreamerInterface(ABC):
@@ -68,33 +68,34 @@ class Streamer(StreamerInterface):
         return self.username == username
 
 
+@dataclass
 class RoleMapper(MapperInterface):
     """
     Maps a list of roles into role objects
     """
+    datasource: list
 
-    def map(self, datasource: list) -> list:
+    def map(self) -> list:
         """
         Map the roles from datasource to a list of objects
-
-        Args:
-            datasource (list): The roles from datasource
 
         Returns:
             list: The list of role objects
         """
 
         roles = []
-        for role in datasource:
+        for role in self.datasource:
             roles.append(Role(int(role['role_id']), role['name']))
 
         return roles
 
 
+@dataclass()
 class StreamerMapper(MapperInterface):
     """
     Maps streamers from the datasource into objects
     """
+    datasource_handler: DatasourceHandlerInterface
 
     def map(self) -> list:
         """
@@ -104,11 +105,11 @@ class StreamerMapper(MapperInterface):
             list: A list of streamer objects
         """
 
-        data = JsonDatasourceHandler().get_contents()
+        data = self.datasource_handler.get_contents()
 
         streamers = []
         for index, streamer in enumerate(data['Streamers']):
-            roles = RoleMapper().map(streamer['roles'])
+            roles = RoleMapper(streamer['roles']).map()
             streamers.append(Streamer(int(streamer['user_id']), streamer['username'], roles))
 
         return streamers

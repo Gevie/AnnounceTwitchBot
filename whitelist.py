@@ -34,11 +34,15 @@ class DatasourceHandlerInterface(ABC):
         """Check if a streamer exists in whitelist by user id"""
 
     @abstractmethod
-    def find(self, user_id: int) -> list:
+    def find(self, user_id: int) -> dict:
         """Find a streamer in te whitelist via user id"""
 
     @abstractmethod
-    def role_exists(self, roles: list, role_id: int) -> bool:
+    def get_contents(self) -> dict:
+        """Get the contents of the datasource"""
+
+    @abstractmethod
+    def role_exists(self, roles: dict, role_id: int) -> bool:
         """Check if a role exists against a streamer by id and role list"""
 
 
@@ -54,6 +58,7 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
         """
         Initialize the class
         """
+
         self.__datasource = os.getenv('STREAMER_DATASOURCE')
         self.__template = os.getenv('TEMPLATE')
         self.__template_streamer = os.getenv('TEMPLATE_STREAMER')
@@ -71,7 +76,7 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
         """
 
         if self.__exists():
-            raise RuntimeError('Cannot create datasource as it already exists')
+            raise RuntimeError('Cannot create json datasource as it already exists')
 
         with open(self.__template) as template:
             template_json = template.read()
@@ -251,7 +256,7 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
 
         return False
 
-    def find(self, user_id: int) -> list:
+    def find(self, user_id: int) -> dict:
         """
         Find the streamer by user id
 
@@ -259,7 +264,7 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
             user_id (int): The user id
 
         Returns:
-            list: The streamer details with associated role
+            dict: The streamer details with associated role
 
         Raises:
             NotFoundException: If the streamer requested could not be found
@@ -274,7 +279,7 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
 
     def get_role_index(self, roles: list, role_id: int) -> int:
         """
-        Find the index key of the passed role_id from roles list
+        Find the index key of the passed role_id from roles dict
 
         Args:
             roles (list): The list of roles to check
@@ -314,7 +319,14 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
 
         raise NotFoundException('Could not find user "{}" to be able to get index'.format(user_id))
 
-    def get_contents(self) -> list:
+    def get_contents(self) -> dict:
+        """
+        Get the contents of the datasource
+
+        Returns:
+            dict: The contents
+        """
+
         return self.__load_contents()
 
     def role_exists(self, roles: list, role_id: int) -> bool:
@@ -322,7 +334,7 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
         Check if the role exists by role id
 
         Args:
-            roles (list): The list of current roles
+            roles (list): The dict of current roles
             role_id (int): The role id
 
         Returns:
