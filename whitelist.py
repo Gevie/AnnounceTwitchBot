@@ -34,15 +34,15 @@ class DatasourceHandlerInterface(ABC):
         """Check if a streamer exists in whitelist by user id"""
 
     @abstractmethod
-    def find(self, user_id: int) -> list:
+    def find(self, user_id: int) -> dict:
         """Find a streamer in te whitelist via user id"""
 
     @abstractmethod
-    def get_contents(self) -> list:
+    def get_contents(self) -> dict:
         """Get the contents of the datasource"""
 
     @abstractmethod
-    def role_exists(self, roles: list, role_id: int) -> bool:
+    def role_exists(self, roles: dict, role_id: int) -> bool:
         """Check if a role exists against a streamer by id and role list"""
 
 
@@ -96,12 +96,12 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
 
         return os.path.isfile(self.__datasource) and os.access(self.__datasource, os.R_OK)
 
-    def __load_contents(self) -> list:
+    def __load_contents(self) -> dict:
         """
         Loads the contents of the json datasource
 
         Returns:
-            list: The json contents as a list
+            dict: The json contents as a dictionary
 
         Raises:
             RuntimeError: If we could not create the datasource if it did not exist already
@@ -115,14 +115,14 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
         with open(self.__datasource) as datasource:
             return json.load(datasource)
 
-    def __save_file(self, contents: list) -> None:
+    def __save_file(self, contents: dict) -> None:
         """
         Saves the contents passed to the datasource file
 
         This method will overwrite the entire file and not append.
 
         Args:
-            contents (list): The new file contents
+            contents (dict): The new file contents
         """
 
         datasource_file = open(self.__datasource, "w")
@@ -256,7 +256,7 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
 
         return False
 
-    def find(self, user_id: int) -> list:
+    def find(self, user_id: int) -> dict:
         """
         Find the streamer by user id
 
@@ -264,7 +264,7 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
             user_id (int): The user id
 
         Returns:
-            list: The streamer details with associated role
+            dict: The streamer details with associated role
 
         Raises:
             NotFoundException: If the streamer requested could not be found
@@ -277,12 +277,12 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
 
         raise NotFoundException("Could not find streamer with user id '{}'".format(user_id))
 
-    def get_role_index(self, roles: list, role_id: int) -> int:
+    def get_role_index(self, roles: dict, role_id: int) -> int:
         """
-        Find the index key of the passed role_id from roles list
+        Find the index key of the passed role_id from roles dict
 
         Args:
-            roles (list): The list of roles to check
+            roles (dict): The dict of roles to check
             role_id (int): The role id
 
         Returns:
@@ -319,22 +319,22 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
 
         raise NotFoundException('Could not find user "{}" to be able to get index'.format(user_id))
 
-    def get_contents(self) -> list:
+    def get_contents(self) -> dict:
         """
         Get the contents of the datasource
 
         Returns:
-            list: The contents
+            dict: The contents
         """
 
         return self.__load_contents()
 
-    def role_exists(self, roles: list, role_id: int) -> bool:
+    def role_exists(self, roles: dict, role_id: int) -> bool:
         """
         Check if the role exists by role id
 
         Args:
-            roles (list): The list of current roles
+            roles (dict): The dict of current roles
             role_id (int): The role id
 
         Returns:

@@ -123,6 +123,8 @@ class StreamerMapper(MapperInterface):
         data = self.datasource_handler.get_contents()
 
         streamers = []
+        print(data)
+        print(type(data))
         for index, streamer in enumerate(data['Streamers']):
             roles = RoleMapper(streamer['roles']).map()
             streamers.append(Streamer(
