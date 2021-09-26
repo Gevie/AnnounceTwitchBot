@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from twitch_api import TwitchStreamInterface
 from whitelist import DatasourceHandlerInterface
 
 
@@ -53,6 +54,7 @@ class Streamer(StreamerInterface):
     id: int
     username: str
     roles: list
+    twitch_stream: TwitchStreamInterface
 
     def is_match(self, username) -> bool:
         """
