@@ -277,7 +277,8 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
 
         raise NotFoundException("Could not find streamer with user id '{}'".format(user_id))
 
-    def get_role_index(self, roles: list, role_id: int) -> int:
+    @staticmethod
+    def get_role_index(roles: list, role_id: int) -> int:
         """
         Find the index key of the passed role_id from roles dict
 
