@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""The setup file"""
 
 import setuptools
 

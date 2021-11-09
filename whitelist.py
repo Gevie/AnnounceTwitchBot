@@ -1,18 +1,20 @@
+"""The whitelist file for the announce twitch bot module"""
 from abc import ABC, abstractmethod
-from dotenv import load_dotenv
 import io
 import json
 import os
+from dotenv import load_dotenv
 
 load_dotenv()
 
 
 class NotFoundException(Exception):
     """Raised when something could not be found"""
-    pass
 
 
 class DatasourceHandlerInterface(ABC):
+    """The datasource handler interface"""
+
     @abstractmethod
     def add_role_to_streamer(self, user_id: int, role_id: int, name: str) -> None:
         """Adds a role to a streamer in the whitelist"""
@@ -78,10 +80,10 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
         if self.__exists():
             raise RuntimeError('Cannot create json datasource as it already exists')
 
-        with open(self.__template) as template:
+        with open(self.__template, encoding='utf8') as template:
             template_json = template.read()
 
-        with io.open(self.__datasource, 'w') as db_file:
+        with io.open(self.__datasource, 'w', encoding='utf8') as db_file:
             db_file.write(template_json)
 
         return self.__exists()
@@ -112,7 +114,7 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
             if not datasource:
                 raise RuntimeError('Unable to load or create the datasource template')
 
-        with open(self.__datasource) as datasource:
+        with open(self.__datasource, encoding='utf8') as datasource:
             return json.load(datasource)
 
     def __save_file(self, contents: dict) -> None:
@@ -125,9 +127,15 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
             contents (dict): The new file contents
         """
 
-        datasource_file = open(self.__datasource, "w")
-        json.dump(contents, datasource_file, ensure_ascii=False, indent='\t', separators=(',', ': '))
-        datasource_file.close()
+        with open(self.__datasource, "w", encoding='utf8') as datasource_file:
+            json.dump(
+                contents,
+                datasource_file,
+                ensure_ascii=False,
+                indent='\t',
+                separators=(',', ': ')
+            )
+            datasource_file.close()
 
     def add_role_to_streamer(self, user_id: int, role_id: int, name: str) -> None:
         """
@@ -147,9 +155,9 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
 
         streamer = self.find(user_id)
         if self.role_exists(streamer['roles'], role_id):
-            raise ValueError('Cannot add role id {} to user {} as it already exists'.format(role_id, user_id))
+            raise ValueError(f'Cannot add role id {role_id} to user {user_id} as it already exists')
 
-        with open(self.__template_role) as role_template:
+        with open(self.__template_role, encoding='utf8') as role_template:
             role = json.load(role_template)
 
         role['role_id'] = role_id
@@ -177,10 +185,10 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
         """
 
         if self.exists(user_id):
-            raise ValueError('Cannot add user "{}" as they already exist'.format(user_id))
+            raise ValueError(f'Cannot add user "{user_id}" as they already exist')
 
         contents = self.__load_contents()
-        with open(self.__template_streamer) as streamer_template:
+        with open(self.__template_streamer, encoding='utf8') as streamer_template:
             streamer = json.load(streamer_template)
 
         streamer['user_id'] = user_id
@@ -204,8 +212,10 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
         """
 
         streamer = self.find(user_id)
-        if not (self.role_exists(streamer['roles'], role_id)):
-            raise NotFoundException('Cannot remove role {} from user {} as it does not exist'.format(role_id, user_id))
+        if not self.role_exists(streamer['roles'], role_id):
+            raise NotFoundException(
+                f'Cannot remove role {role_id} from user {user_id} as it does not exist'
+            )
 
         role_index = self.get_role_index(streamer['roles'], role_id)
         streamer['roles'].pop(role_index)
@@ -230,8 +240,8 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
             NotFoundException: If the user cannot be found
         """
 
-        if not (self.exists(user_id)):
-            raise NotFoundException('Cannot find user with id {} for deletion'.format(user_id))
+        if not self.exists(user_id):
+            raise NotFoundException(f'Cannot find user with id {user_id} for deletion')
 
         contents = self.__load_contents()
         streamer_index = self.get_streamer_index(user_id)
@@ -275,7 +285,7 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
             if streamer['user_id'] == user_id:
                 return streamer
 
-        raise NotFoundException("Could not find streamer with user id '{}'".format(user_id))
+        raise NotFoundException(f"Could not find streamer with user id '{user_id}'")
 
     @staticmethod
     def get_role_index(roles: list, role_id: int) -> int:
@@ -297,7 +307,7 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
             if role['role_id'] == role_id:
                 return index
 
-        raise NotFoundException('Could not find role "{}" to be able to get index'.format(role_id))
+        raise NotFoundException(f'Could not find role "{role_id}" to be able to get index')
 
     def get_streamer_index(self, user_id: int) -> int:
         """
@@ -318,7 +328,7 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
             if streamer['user_id'] == user_id:
                 return index
 
-        raise NotFoundException('Could not find user "{}" to be able to get index'.format(user_id))
+        raise NotFoundException(f'Could not find user "{user_id}" to be able to get index')
 
     def get_contents(self) -> dict:
         """

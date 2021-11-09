@@ -1,6 +1,7 @@
+"""The test for the whitelist file in the twitch announce bot module"""
 from unittest.mock import Mock, patch, mock_open
-from whitelist import DatasourceHandlerInterface, NotFoundException, JsonDatasourceHandler
 import unittest
+from whitelist import DatasourceHandlerInterface, NotFoundException, JsonDatasourceHandler
 
 
 class TestJsonDatasourceHandler(unittest.TestCase):
@@ -69,7 +70,7 @@ class TestJsonDatasourceHandler(unittest.TestCase):
 
         role_data = '{"role_id": "<role_id:placeholder>", "name": "<name:placeholder>"}'
 
-        with patch("builtins.open", mock_open(read_data=role_data)) as mock_file:
+        with patch("builtins.open", mock_open(read_data=role_data)):
             json_datasource_handler._JsonDatasourceHandler__load_contents = Mock()
             json_datasource_handler._JsonDatasourceHandler__load_contents.return_value = new_streamer
 
@@ -441,6 +442,12 @@ class TestJsonDatasourceHandler(unittest.TestCase):
         self.assertEqual(response, contents)
 
     def role_exists(self):
+        """
+        Test the role exists method
+
+        Returns:
+            None
+        """
 
         # Give
         json_datasource_handler = JsonDatasourceHandler()

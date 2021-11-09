@@ -1,3 +1,5 @@
+"""The commands file of the announce twitch bot module"""
+
 import discord
 from discord.ext import commands
 from discord.utils import get
@@ -24,7 +26,13 @@ class CommandsCog(commands.Cog):
     @commands.command(name='add_streamer', pass_context=True)
     @commands.has_permissions(administrator=True)
     @commands.guild_only()
-    async def add_streamer(self, ctx, user: discord.User, username: str, *roles: discord.Role) -> None:
+    async def add_streamer(
+        self,
+        ctx,
+        user: discord.User,
+        username: str,
+        *roles: discord.Role
+    ) -> None:
         """
         Adds a streamer to the datasource / whitelist
 
@@ -144,25 +152,27 @@ class CommandsCog(commands.Cog):
             None
         """
 
-        streamerMapper = StreamerMapper(self.datasource, TwitchHandler())
-        streamers = streamerMapper.map()
+        streamer_mapper = StreamerMapper(self.datasource, TwitchHandler())
+        streamers = streamer_mapper.map()
 
-        for idx, streamer in enumerate(streamers):
+        for streamer in streamers:
             user = await self.bot.fetch_user(streamer.id)
             embed = discord.Embed(
                 title=streamer.username,
-                description=f"You can follow {user.mention} on twitch at https://twitch.tv/{streamer.username}"
+                description=f"You can follow {user.mention} on twitch at"
+                            f" https://twitch.tv/{streamer.username}"
             )
             embed.set_thumbnail(url=user.avatar_url)
             role_list = "Subscribe to the following roles to be alerted when they're next live:\n "
 
             for role in streamer.roles:
-                roleTag = get(ctx.guild.roles, id=role.id)
-                role_list += f"{roleTag.mention}, "
+                role_tag = get(ctx.guild.roles, id=role.id)
+                role_list += f"{role_tag.mention}, "
 
             embed.add_field(name="Roles", value=role_list)
             await ctx.send(embed=embed)
 
 
 def setup(bot):
+    """Sets up the bot by adding the commands cog"""
     bot.add_cog(CommandsCog(bot))

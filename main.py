@@ -1,6 +1,8 @@
+"""The main file for the announce twitch bot module"""
+
+import os
 import discord
 from discord.ext import commands
-import os
 from dotenv import load_dotenv
 
 __version_info__ = ('0', '3', '0')

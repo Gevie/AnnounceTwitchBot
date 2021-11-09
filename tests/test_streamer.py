@@ -1,8 +1,9 @@
-from streamer import Role, RoleMapper, MapperInterface, Streamer, StreamerInterface, StreamerMapper
+"""The test for the streamer file in the twitch announce bot module"""
 from unittest.mock import Mock
+import unittest
+from streamer import Role, RoleMapper, MapperInterface, Streamer, StreamerInterface, StreamerMapper
 from twitch_api import TwitchHandlerInterface
 from whitelist import DatasourceHandlerInterface
-import unittest
 
 
 class TestRole(unittest.TestCase):

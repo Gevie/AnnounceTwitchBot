@@ -1,3 +1,4 @@
+"""The streamer file for the announce twitch bot module"""
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Optional
@@ -112,10 +113,15 @@ class StreamerMapper(MapperInterface):
         data = self.datasource_handler.get_contents()
 
         streamers = []
-        for index, streamer in enumerate(data['Streamers']):
+        for streamer in data['Streamers']:
             twitch_stream = self.twitch_handler.get_stream(streamer['username'])
 
             roles = RoleMapper(streamer['roles']).map()
-            streamers.append(Streamer(int(streamer['user_id']), streamer['username'], roles, twitch_stream))
+            streamers.append(Streamer(
+                int(streamer['user_id']),
+                streamer['username'],
+                roles,
+                twitch_stream
+            ))
 
         return streamers

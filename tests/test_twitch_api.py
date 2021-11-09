@@ -1,3 +1,4 @@
+"""The test for the twitch api file in the twitch announce bot module"""
 import datetime
 import unittest
 from unittest.mock import patch
@@ -133,22 +134,22 @@ class TestTwitchHandler(unittest.TestCase):
             twitch_client.get_oauth.return_value = True
             started_at = datetime.datetime.now()
 
-            class ResponseObject(object):
-                pass
+            class ResponseObject:
+                """A mock object for the response of get_streams"""
 
             response_object = ResponseObject()
-            response_object.id = 1,
-            response_object.user_id = 1,
-            response_object.user_login = 'test_stream',
-            response_object.user_name = 'Test_Stream',
-            response_object.game_id = 1,
-            response_object.game_name = 'Test Game',
-            response_object.type = 'Live',
-            response_object.title = 'This is a test stream',
-            response_object.viewer_count = 15,
-            response_object.started_at = started_at,
-            response_object.language = 'English',
-            response_object.thumbnail_url = 'imagepath',
+            response_object.id = 1
+            response_object.user_id = 1
+            response_object.user_login = 'test_stream'
+            response_object.user_name = 'Test_Stream'
+            response_object.game_id = 1
+            response_object.game_name = 'Test Game'
+            response_object.type = 'Live'
+            response_object.title = 'This is a test stream'
+            response_object.viewer_count = 15
+            response_object.started_at = started_at
+            response_object.language = 'English'
+            response_object.thumbnail_url = 'imagepath'
             response_object.is_mature = False
             twitch_client.get_streams.return_value = [response_object]
 

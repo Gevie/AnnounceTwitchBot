@@ -1,4 +1,4 @@
-name: Run tests
+name: Run tests & linter
 on:
   pull_request:
     branches:
@@ -33,3 +33,6 @@ jobs:
 
       - name: Run unit tests
         run: python -m pytest --import-mode=append tests/
+
+      - name: Run pylint
+        run: pylint `ls -R|grep .py$|xargs`
