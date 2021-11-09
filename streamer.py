@@ -21,6 +21,15 @@ class StreamerInterface(ABC):
             bool: True if matched else false
         """
 
+    @abstractmethod
+    def is_live(self) -> bool:
+        """
+        Checks if the streamer is live or not
+
+        Returns:
+            bool: True if live, else false
+        """
+
 
 class MapperInterface(ABC):
     """
@@ -42,6 +51,7 @@ class Role:
     """
     Holds an instance of a role
     """
+
     id: int
     name: str
 
@@ -51,11 +61,13 @@ class Streamer(StreamerInterface):
     """
     Holds an instance of a streamer
     """
+
     id: int
     username: str
     roles: list
+    is_online: bool
 
-    def is_match(self, username) -> bool:
+    def is_match(self, username: str) -> bool:
         """
         Checks if the passed username matches the streamer
 
@@ -67,6 +79,16 @@ class Streamer(StreamerInterface):
         """
 
         return self.username == username
+
+    def is_live(self) -> bool:
+        """
+        Checks if the streamer is live or not
+
+        Returns:
+            bool: True if live, else false
+        """
+
+        return self.is_online
 
 
 @dataclass
@@ -114,7 +136,8 @@ class StreamerMapper(MapperInterface):
             streamers.append(Streamer(
                 int(streamer['user_id']),
                 streamer['username'],
-                roles
+                roles,
+                streamer['is_online']
             ))
 
         return streamers

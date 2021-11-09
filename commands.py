@@ -55,8 +55,7 @@ class CommandsCog(commands.Cog):
         """
         for index, streamer in enumerate(streamers):
             if streamer.username in live_streams:
-                # self.datasource.mark_as_online(streamer)
-                print('todo: mark as online')
+                self.datasource.mark_status(streamer.id, True)
                 streamers.pop(index)
 
         return streamers
@@ -73,8 +72,7 @@ class CommandsCog(commands.Cog):
         """
         for streamer in streamers:
             if streamer.is_live():
-                # self.datasource.mark_as_offline(streamer)
-                print('todo: mark as offline')
+                self.datasource.mark_status(streamer.id, False)
 
     @commands.Cog.listener()
     async def on_ready(self):
