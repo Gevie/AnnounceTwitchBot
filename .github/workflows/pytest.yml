@@ -35,4 +35,4 @@ jobs:
         run: python -m pytest --import-mode=append tests/
 
       - name: Run pylint
-        run: pylint `ls -R|grep .py$|xargs`
+        run: pylint `ls -R|grep .py$|xargs` --ignore=tests
