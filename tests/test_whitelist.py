@@ -1,4 +1,4 @@
-from unittest.mock import Mock
+from unittest.mock import Mock, patch, mock_open
 from whitelist import DatasourceHandlerInterface, NotFoundException, JsonDatasourceHandler
 import unittest
 
@@ -67,22 +67,25 @@ class TestJsonDatasourceHandler(unittest.TestCase):
         json_datasource_handler.role_exists = Mock()
         json_datasource_handler.role_exists.return_value = False
 
-        json_datasource_handler._JsonDatasourceHandler__load_contents = Mock()
-        json_datasource_handler._JsonDatasourceHandler__load_contents.return_value = new_streamer
+        role_data = '{"role_id": "<role_id:placeholder>", "name": "<name:placeholder>"}'
 
-        json_datasource_handler.get_streamer_index = Mock()
-        json_datasource_handler.get_streamer_index.return_value = 0
+        with patch("builtins.open", mock_open(read_data=role_data)) as mock_file:
+            json_datasource_handler._JsonDatasourceHandler__load_contents = Mock()
+            json_datasource_handler._JsonDatasourceHandler__load_contents.return_value = new_streamer
 
-        json_datasource_handler._JsonDatasourceHandler__save_file = Mock()
+            json_datasource_handler.get_streamer_index = Mock()
+            json_datasource_handler.get_streamer_index.return_value = 0
 
-        # When
-        json_datasource_handler.add_role_to_streamer(1, 2, 'MockObject')
+            json_datasource_handler._JsonDatasourceHandler__save_file = Mock()
 
-        # Then
-        json_datasource_handler.find.assert_called_with(1)
-        json_datasource_handler.role_exists.assert_called_with(old_streamer['roles'], 2)
-        json_datasource_handler.get_streamer_index.assert_called_with(1)
-        json_datasource_handler._JsonDatasourceHandler__save_file.assert_called_with(new_streamer)
+            # When
+            json_datasource_handler.add_role_to_streamer(1, 2, 'MockObject')
+
+            # Then
+            json_datasource_handler.find.assert_called_with(1)
+            json_datasource_handler.role_exists.assert_called_with(old_streamer['roles'], 2)
+            json_datasource_handler.get_streamer_index.assert_called_with(1)
+            json_datasource_handler._JsonDatasourceHandler__save_file.assert_called_with(new_streamer)
 
     def test_add_role_to_streamer_failure(self):
         """
