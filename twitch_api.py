@@ -175,24 +175,3 @@ class TwitchHandler(TwitchHandlerInterface):
             )
 
         return streams
-
-
-@dataclass()
-class TestStreamer:
-    username: str
-
-
-streamers2 = [
-    TestStreamer('theg3vie'),
-    TestStreamer('OhTofu'),
-    TestStreamer('otzdarva'),
-    TestStreamer('spookyloopz')
-]
-
-twitch_handler = TwitchHandler()
-for streamer in streamers2:
-    test = twitch_handler.get_stream(streamer.username)
-    print(test)
-
-# streams2 = twitch_handler.get_streams(streamers2)
-# print(streams2)
