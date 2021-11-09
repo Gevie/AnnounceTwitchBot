@@ -1,9 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
-from itertools import islice
 from typing import Optional
-
 from dotenv import load_dotenv
 import os
 import twitch
@@ -78,18 +76,6 @@ class TwitchHandlerInterface(ABC):
             TwitchStreamInterface: If the stream is live, else none
         """
 
-    @abstractmethod
-    def get_streams(self, streamers: list) -> list:
-        """
-        Gets a list of streams based on streamers passed
-
-        Args:
-            streamers (list): The streamers to check for
-
-        Returns:
-            list: A list of TwitchStreamInterfaces
-        """
-
 
 class TwitchHandler(TwitchHandlerInterface):
     """
@@ -141,37 +127,3 @@ class TwitchHandler(TwitchHandlerInterface):
             thumbnail=response[0].thumbnail_url,
             is_mature=response[0].is_mature
         )
-
-    def get_streams(self, streamers: list) -> dict:
-        """
-        Gets a list of streams based on streamers passed
-
-        Args:
-            streamers (list): The streamers to check for
-
-        Returns:
-            list: A list of TwitchStreamInterfaces
-        """
-
-        users = list(map(lambda streamer: streamer.username, streamers))
-        response = self.client.get_streams(user_logins=users)
-
-        streams = {}
-        for stream in islice(response, 1, len(users)):
-            streams[stream.user_name] = TwitchStream(
-                id=stream.id,
-                user_id=stream.user_id,
-                user_login=stream.user_login,
-                user_name=stream.user_name,
-                game_id=stream.game_id,
-                game_name=stream.game_name,
-                live=stream.type,
-                title=stream.title,
-                viewer_count=stream.viewer_count,
-                started_at=stream.started_at,
-                language=stream.language,
-                thumbnail=stream.thumbnail_url,
-                is_mature=stream.is_mature
-            )
-
-        return streams

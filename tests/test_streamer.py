@@ -1,6 +1,5 @@
 from streamer import Role, RoleMapper, MapperInterface, Streamer, StreamerInterface, StreamerMapper
 from unittest.mock import Mock
-
 from twitch_api import TwitchHandlerInterface
 from whitelist import DatasourceHandlerInterface
 import unittest
