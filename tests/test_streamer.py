@@ -1,5 +1,7 @@
 from streamer import Role, RoleMapper, MapperInterface, Streamer, StreamerInterface, StreamerMapper
 from unittest.mock import Mock
+
+from twitch_api import TwitchHandlerInterface
 from whitelist import DatasourceHandlerInterface
 import unittest
 
@@ -84,7 +86,8 @@ class TestStreamerMapper(unittest.TestCase):
 
         # Give
         datasource_handler = Mock(spec=DatasourceHandlerInterface)
-        streamer_mapper = StreamerMapper(datasource_handler)
+        twitch_handler = Mock(spec=TwitchHandlerInterface)
+        streamer_mapper = StreamerMapper(datasource_handler, twitch_handler)
 
         # Then
         self.assertTrue(streamer_mapper, MapperInterface)
@@ -119,7 +122,10 @@ class TestStreamerMapper(unittest.TestCase):
             ]
         }
 
-        streamer_mapper = StreamerMapper(datasource)
+        twitch_handler = Mock(spec=TwitchHandlerInterface)
+        twitch_handler.get_stream.return_value = None
+
+        streamer_mapper = StreamerMapper(datasource, twitch_handler)
 
         # When
         mapped_streamers = streamer_mapper.map()
