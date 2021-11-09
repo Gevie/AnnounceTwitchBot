@@ -32,17 +32,18 @@ class CommandsCog(commands.Cog):
         Returns:
             None
         """
+
         streamer_mapper = StreamerMapper(self.datasource)
         streamers = streamer_mapper.map()
         twitch_handler = TwitchHandler()
         live_streams = twitch_handler.get_streams(streamers)
 
         if len(live_streams) > 0:
-            streamers = self.mark_as_online(streamers, live_streams)
+            streamers = await self.mark_as_online(streamers, live_streams)
 
-        self.mark_as_offline(streamers)
+        self.mark_as_offline(streamers, live_streams)
 
-    def mark_as_online(self, streamers: list, live_streams: dict) -> list:
+    async def mark_as_online(self, streamers: list, live_streams: dict) -> list:
         """
         Flags any streamers as live and remove them from the list
 
@@ -53,26 +54,32 @@ class CommandsCog(commands.Cog):
         Returns:
             List: The remaining streamers
         """
+
         for index, streamer in enumerate(streamers):
-            if streamer.username in live_streams:
+            if streamer.username in live_streams and not streamer.is_online:
                 self.datasource.mark_status(streamer.id, True)
+                channel = self.bot.get_channel(873690928991305758)
+                await channel.send(f'{streamer.username} has just gone live!')
                 streamers.pop(index)
 
         return streamers
 
-    def mark_as_offline(self, streamers: list) -> None:
+    def mark_as_offline(self, streamers: list, live_streams: dict) -> None:
         """
         Flags any streamers as offline
 
         Args:
             streamers (list): A list of streamer objects
+            live_streams (dict): A dict of streams
 
         Returns:
             None
         """
+
         for streamer in streamers:
-            if streamer.is_live():
+            if streamer.username not in live_streams and streamer.is_online:
                 self.datasource.mark_status(streamer.id, False)
+                print(f'Marking {streamer.id} as offline')
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -248,7 +255,7 @@ class CommandsCog(commands.Cog):
             None
         """
 
-        streamer_mapper = StreamerMapper(self.datasource, TwitchHandler())
+        streamer_mapper = StreamerMapper(self.datasource)
         streamers = streamer_mapper.map()
 
         for streamer in streamers:
