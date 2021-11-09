@@ -43,6 +43,46 @@ class CommandsCog(commands.Cog):
 
         self.mark_as_offline(streamers, live_streams)
 
+    async def announce(self, streamer, stream) -> None:
+        """
+        Announces to the discord server when a streamer goes live
+
+        Args:
+            streamer (StreamerInterface): The streamer
+            stream (TwitchStreamInterface): The twitch stream
+
+        Returns:
+            None
+        """
+
+        channel = self.bot.get_channel(873690928991305758)
+        user = await self.bot.fetch_user(streamer.id)
+        embed = discord.Embed(
+            title=streamer.username,
+            description=f"{user.mention} has just gone live on Twitch!"
+        )
+
+        print(stream)
+        thumbnail = stream.thumbnail
+        thumbnail = thumbnail.replace('{width}', '600')
+        thumbnail = thumbnail.replace('{height}', '400')
+        embed.set_image(url=thumbnail)
+
+        embed.add_field(name="Twitch URL", value=f'https://twitch.tv/{streamer.username}')
+        embed.add_field(name="Title", value=stream.title, inline=False)
+        embed.add_field(name="Currently Playing", value=stream.game_name, inline=False)
+        embed.add_field(name="Viewers", value=stream.viewer_count, inline=False)
+
+        if len(streamer.roles) > 0:
+            role_list = ''
+            for role in streamer.roles:
+                role_tag = get(channel.guild.roles, id=role.id)
+                role_list += f"{role_tag.mention}, "
+
+            embed.add_field(name='Tagging', value=role_list[:-2], inline=False)
+
+        await channel.send(embed=embed)
+
     async def mark_as_online(self, streamers: list, live_streams: dict) -> list:
         """
         Flags any streamers as live and remove them from the list
@@ -58,8 +98,7 @@ class CommandsCog(commands.Cog):
         for index, streamer in enumerate(streamers):
             if streamer.username in live_streams and not streamer.is_online:
                 self.datasource.mark_status(streamer.id, True)
-                channel = self.bot.get_channel(873690928991305758)
-                await channel.send(f'{streamer.username} has just gone live!')
+                await self.announce(streamer, live_streams[streamer.username])
                 streamers.pop(index)
 
         return streamers

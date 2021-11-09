@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 
-__version_info__ = ('0', '3', '0')
+__version_info__ = ('0', '6', '1')
 __version__ = '.'.join(__version_info__)
 
 bot = commands.Bot(command_prefix="!", description='A bot for announcing twitch streamers')
