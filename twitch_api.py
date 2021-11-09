@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
+from itertools import islice
+from typing import Optional
+
 from dotenv import load_dotenv
-from streamer import StreamerInterface, StreamerMapper
 import os
 import twitch
-
-from whitelist import JsonDatasourceHandler
 
 load_dotenv()
 
@@ -67,6 +67,18 @@ class TwitchHandlerInterface(ABC):
     """
 
     @abstractmethod
+    def get_stream(self, username: str) -> Optional[TwitchStreamInterface]:
+        """
+        Grabs an individual stream object if passed streamer is live
+
+        Args:
+            username (str): The username to check
+
+        Returns:
+            TwitchStreamInterface: If the stream is live, else none
+        """
+
+    @abstractmethod
     def get_streams(self, streamers: list) -> list:
         """
         Gets a list of streams based on streamers passed
@@ -99,7 +111,38 @@ class TwitchHandler(TwitchHandlerInterface):
 
         self.client.get_oauth()
 
-    def get_streams(self, streamers: list) -> list:
+    def get_stream(self, username: str) -> Optional[TwitchStreamInterface]:
+        """
+        Grabs an individual stream object if passed streamer is live
+
+        Args:
+            username (str): The username to check
+
+        Returns:
+            TwitchStreamInterface: If the stream is live, else none
+        """
+
+        response = self.client.get_streams(user_logins=username)
+        if not response:
+            return None
+
+        return TwitchStream(
+            id=response[0].id,
+            user_id=response[0].user_id,
+            user_login=response[0].user_login,
+            user_name=response[0].user_name,
+            game_id=response[0].game_id,
+            game_name=response[0].game_name,
+            live=response[0].type,
+            title=response[0].title,
+            viewer_count=response[0].viewer_count,
+            started_at=response[0].started_at,
+            language=response[0].language,
+            thumbnail=response[0].thumbnail_url,
+            is_mature=response[0].is_mature
+        )
+
+    def get_streams(self, streamers: list) -> dict:
         """
         Gets a list of streams based on streamers passed
 
@@ -113,9 +156,9 @@ class TwitchHandler(TwitchHandlerInterface):
         users = list(map(lambda streamer: streamer.username, streamers))
         response = self.client.get_streams(user_logins=users)
 
-        streams = []
-        for stream in response:
-            streams.append(TwitchStream(
+        streams = {}
+        for stream in islice(response, 1, len(users)):
+            streams[stream.user_name] = TwitchStream(
                 id=stream.id,
                 user_id=stream.user_id,
                 user_login=stream.user_login,
@@ -127,17 +170,29 @@ class TwitchHandler(TwitchHandlerInterface):
                 viewer_count=stream.viewer_count,
                 started_at=stream.started_at,
                 language=stream.language,
-                thumbnail=stream.thumbnail,
+                thumbnail=stream.thumbnail_url,
                 is_mature=stream.is_mature
-            ))
+            )
 
         return streams
 
 
-streamerMapper = StreamerMapper(JsonDatasourceHandler())
-streamers = streamerMapper.map()
+@dataclass()
+class TestStreamer:
+    username: str
+
+
+streamers2 = [
+    TestStreamer('theg3vie'),
+    TestStreamer('OhTofu'),
+    TestStreamer('otzdarva'),
+    TestStreamer('spookyloopz')
+]
 
 twitch_handler = TwitchHandler()
-streams = twitch_handler.get_streams(streamers)
+for streamer in streamers2:
+    test = twitch_handler.get_stream(streamer.username)
+    print(test)
 
-print(streams)
+# streams2 = twitch_handler.get_streams(streamers2)
+# print(streams2)

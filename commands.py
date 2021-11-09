@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from discord.utils import get
 from streamer import StreamerMapper
+from twitch_api import TwitchHandler
 from whitelist import JsonDatasourceHandler, NotFoundException
 
 
@@ -143,7 +144,7 @@ class CommandsCog(commands.Cog):
             None
         """
 
-        streamerMapper = StreamerMapper(self.datasource)
+        streamerMapper = StreamerMapper(self.datasource, TwitchHandler())
         streamers = streamerMapper.map()
 
         for idx, streamer in enumerate(streamers):
