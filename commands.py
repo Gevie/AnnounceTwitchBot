@@ -1,7 +1,7 @@
 """The commands file of the announce twitch bot module"""
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord.utils import get
 from streamer import StreamerMapper
 from twitch_api import TwitchHandler
@@ -20,8 +20,31 @@ class CommandsCog(commands.Cog):
         Args:
             bot: The discord bot
         """
+
         self.bot = bot
         self.datasource = JsonDatasourceHandler()
+
+    @tasks.loop(seconds=60)
+    async def check_streamers(self):
+        """
+        Checks twitch streamers every interval to be able to announce go lives
+
+        Returns:
+            None
+        """
+
+        print('Checking streamers')
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        """
+        Executed on ready, currently used to start the check streamers task
+
+        Returns:
+            None
+        """
+
+        self.check_streamers.start()
 
     @commands.command(name='add_streamer', pass_context=True)
     @commands.has_permissions(administrator=True)
@@ -138,6 +161,40 @@ class CommandsCog(commands.Cog):
             except ValueError:
                 continue
 
+    @commands.command(name='enable_announcements', pass_context=True)
+    @commands.has_permissions(administrator=True)
+    @commands.guild_only()
+    async def enable_announcements(self, ctx) -> None:
+        """
+        Used to enable the check streamers task
+
+        Args:
+            ctx: Represents the :class:`.Context`
+
+        Returns:
+            None
+        """
+
+        self.check_streamers.start()
+        await ctx.send('I am now actively checking twitch streams')
+
+    @commands.command(name='disable_announcements', pass_context=True)
+    @commands.has_permissions(administrator=True)
+    @commands.guild_only()
+    async def disable_announcements(self, ctx) -> None:
+        """
+        Used to disable the check streamers task
+
+        Args:
+            ctx: Represents the :class:`.Context`
+
+        Returns:
+            None
+        """
+
+        self.check_streamers.stop()
+        await ctx.send('I will no longer check twitch streams')
+
     @commands.command(name='list_streamers', pass_context=True)
     @commands.has_permissions(administrator=True)
     @commands.guild_only()
@@ -175,4 +232,5 @@ class CommandsCog(commands.Cog):
 
 def setup(bot):
     """Sets up the bot by adding the commands cog"""
+
     bot.add_cog(CommandsCog(bot))
