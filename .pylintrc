@@ -1,2 +1,5 @@
+[MASTER]
+ignore=tests
+
 [MESSAGES CONTROL]
-disable=invalid-name,too-few-public-methods,too-many-instance-attributes,attribute-defined-outside-init,protected-access,line-too-long,no-self-use
+disable=invalid-name,too-few-public-methods,too-many-instance-attributes
