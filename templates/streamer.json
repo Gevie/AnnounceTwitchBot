@@ -1,5 +1,6 @@
 {
   "user_id": "<user_id:placeholder>",
   "username": "<username:placeholder>",
-  "roles": []
+  "roles": [],
+  "is_online": false
 }

@@ -24,7 +24,7 @@ class CommandsCog(commands.Cog):
         self.bot = bot
         self.datasource = JsonDatasourceHandler()
 
-    @tasks.loop(seconds=60)
+    @tasks.loop(minutes=5)
     async def check_streamers(self):
         """
         Checks twitch streamers every interval to be able to announce go lives
@@ -32,8 +32,49 @@ class CommandsCog(commands.Cog):
         Returns:
             None
         """
+        streamer_mapper = StreamerMapper(self.datasource)
+        streamers = streamer_mapper.map()
+        twitch_handler = TwitchHandler()
+        live_streams = twitch_handler.get_streams(streamers)
 
-        print('Checking streamers')
+        if len(live_streams) > 0:
+            streamers = self.mark_as_online(streamers, live_streams)
+
+        self.mark_as_offline(streamers)
+
+    def mark_as_online(self, streamers: list, live_streams: dict) -> list:
+        """
+        Flags any streamers as live and remove them from the list
+
+        Args:
+            streamers (list): A list of Streamer objects
+            live_streams (dict): A dict of streams
+
+        Returns:
+            List: The remaining streamers
+        """
+        for index, streamer in enumerate(streamers):
+            if streamer.username in live_streams:
+                # self.datasource.mark_as_online(streamer)
+                print('todo: mark as online')
+                streamers.pop(index)
+
+        return streamers
+
+    def mark_as_offline(self, streamers: list) -> None:
+        """
+        Flags any streamers as offline
+
+        Args:
+            streamers (list): A list of streamer objects
+
+        Returns:
+            None
+        """
+        for streamer in streamers:
+            if streamer.is_live():
+                # self.datasource.mark_as_offline(streamer)
+                print('todo: mark as offline')
 
     @commands.Cog.listener()
     async def on_ready(self):

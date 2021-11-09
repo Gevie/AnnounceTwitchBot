@@ -1,8 +1,6 @@
 """The streamer file for the announce twitch bot module"""
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Optional
-from twitch_api import TwitchStreamInterface, TwitchHandlerInterface
 from whitelist import DatasourceHandlerInterface
 
 
@@ -56,7 +54,6 @@ class Streamer(StreamerInterface):
     id: int
     username: str
     roles: list
-    twitch_stream: Optional[TwitchStreamInterface] = None
 
     def is_match(self, username) -> bool:
         """
@@ -100,7 +97,6 @@ class StreamerMapper(MapperInterface):
     Maps streamers from the datasource into objects
     """
     datasource_handler: DatasourceHandlerInterface
-    twitch_handler: TwitchHandlerInterface
 
     def map(self) -> list:
         """
@@ -114,14 +110,11 @@ class StreamerMapper(MapperInterface):
 
         streamers = []
         for streamer in data['Streamers']:
-            twitch_stream = self.twitch_handler.get_stream(streamer['username'])
-
             roles = RoleMapper(streamer['roles']).map()
             streamers.append(Streamer(
                 int(streamer['user_id']),
                 streamer['username'],
-                roles,
-                twitch_stream
+                roles
             ))
 
         return streamers

@@ -2,6 +2,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
+from itertools import islice
 from typing import Optional
 import os
 from dotenv import load_dotenv
@@ -10,54 +11,17 @@ import twitch
 load_dotenv()
 
 
-class TwitchStreamInterface(ABC):
-    """
-    The twitch stream interface
-    """
-
-    @abstractmethod
-    def is_live(self) -> bool:
-        """
-        Checks if the user passed is currently live
-
-        Args
-            username (str): The twitch username / user_login
-
-        Returns
-            bool: True if live, else false
-        """
-
-
 @dataclass
-class TwitchStream(TwitchStreamInterface):
+class TwitchStream:
     """
     The twitch stream implementation
     """
-    id: int
-    user_id: int
-    user_login: str
     user_name: str
-    game_id: int
     game_name: str
-    live: str
     title: str
     viewer_count: int
     started_at: datetime
-    language: str
     thumbnail: str
-    is_mature: bool
-
-    def is_live(self):
-        """
-        Checks if the user passed is currently live
-
-        Args
-            username (str): The twitch username / user_login
-
-        Returns
-            bool: True if live, else false
-        """
-        return self.live == 'Live'
 
 
 class TwitchHandlerInterface(ABC):
@@ -66,15 +30,15 @@ class TwitchHandlerInterface(ABC):
     """
 
     @abstractmethod
-    def get_stream(self, username: str) -> Optional[TwitchStreamInterface]:
+    def get_streams(self, streamers: list) -> dict:
         """
-        Grabs an individual stream object if passed streamer is live
+        Gets a list of streams based on streamers passed
 
         Args:
-            username (str): The username to check
+            streamers (list): The streamers to check for
 
         Returns:
-            TwitchStreamInterface: If the stream is live, else none
+            list: A list of TwitchStreamInterfaces
         """
 
 
@@ -98,33 +62,29 @@ class TwitchHandler(TwitchHandlerInterface):
 
         self.client.get_oauth()
 
-    def get_stream(self, username: str) -> Optional[TwitchStreamInterface]:
+    def get_streams(self, streamers: list) -> dict:
         """
-        Grabs an individual stream object if passed streamer is live
+        Gets a list of streams based on streamers passed
 
         Args:
-            username (str): The username to check
+            streamers (list): The streamers to check for
 
         Returns:
-            TwitchStreamInterface: If the stream is live, else none
+            list: A list of TwitchStreamInterfaces
         """
 
-        response = self.client.get_streams(user_logins=username)
-        if not response:
-            return None
+        users = list(map(lambda streamer: streamer.username, streamers))
+        response = self.client.get_streams(user_logins=users)
 
-        return TwitchStream(
-            id=response[0].id,
-            user_id=response[0].user_id,
-            user_login=response[0].user_login,
-            user_name=response[0].user_name,
-            game_id=response[0].game_id,
-            game_name=response[0].game_name,
-            live=response[0].type,
-            title=response[0].title,
-            viewer_count=response[0].viewer_count,
-            started_at=response[0].started_at,
-            language=response[0].language,
-            thumbnail=response[0].thumbnail_url,
-            is_mature=response[0].is_mature
-        )
+        streams = {}
+        for stream in islice(response, 1, len(users)):
+            streams[stream.user_login] = TwitchStream(
+                user_name=stream.user_name,
+                game_name=stream.game_name,
+                title=stream.title,
+                viewer_count=stream.viewer_count,
+                started_at=stream.started_at,
+                thumbnail=stream.thumbnail_url
+            )
+
+        return streams
