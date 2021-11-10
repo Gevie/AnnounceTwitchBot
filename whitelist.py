@@ -44,6 +44,10 @@ class DatasourceHandlerInterface(ABC):
         """Get the contents of the datasource"""
 
     @abstractmethod
+    def mark_status(self, user_id: int, status: bool = False) -> None:
+        """Marks a user as offline or online"""
+
+    @abstractmethod
     def role_exists(self, roles: dict, role_id: int) -> bool:
         """Check if a role exists against a streamer by id and role list"""
 
@@ -193,6 +197,7 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
 
         streamer['user_id'] = user_id
         streamer['username'] = username
+        streamer['is_online'] = False
         contents['Streamers'].append(streamer)
         self.__save_file(contents)
 
@@ -339,6 +344,30 @@ class JsonDatasourceHandler(DatasourceHandlerInterface):
         """
 
         return self.__load_contents()
+
+    def mark_status(self, user_id: int, status: bool = False) -> None:
+        """
+        Marks a user as offline or online
+
+        Args:
+            user_id (int): The user to mark as online or offline
+            status (bool): True for online, False for offline
+
+        Returns:
+            None
+
+        Raises:
+            ValueError: If the user does not exist
+        """
+        if not self.exists(user_id):
+            raise ValueError(f'Cannot flag user "{user_id}" as offline as they do not exist.')
+
+        contents = self.__load_contents()
+
+        streamer_index = self.get_streamer_index(user_id)
+        contents['Streamers'][streamer_index]['is_online'] = status
+
+        self.__save_file(contents)
 
     def role_exists(self, roles: list, role_id: int) -> bool:
         """

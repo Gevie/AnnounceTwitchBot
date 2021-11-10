@@ -1,10 +1,11 @@
 """The commands file of the announce twitch bot module"""
-
+import os
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord.utils import get
-from streamer import StreamerMapper
-from twitch_api import TwitchHandler
+from dotenv import load_dotenv
+from streamer import StreamerMapper, StreamerInterface
+from twitch_api import TwitchHandler, TwitchStream
 from whitelist import JsonDatasourceHandler, NotFoundException
 
 
@@ -20,8 +21,134 @@ class CommandsCog(commands.Cog):
         Args:
             bot: The discord bot
         """
+
         self.bot = bot
         self.datasource = JsonDatasourceHandler()
+
+    @tasks.loop(minutes=5)
+    async def check_streamers(self):
+        """
+        Checks twitch streamers every interval to be able to announce go lives
+
+        Returns:
+            None
+        """
+
+        streamer_mapper = StreamerMapper(self.datasource)
+        streamers = streamer_mapper.map()
+        twitch_handler = TwitchHandler()
+        live_streams = twitch_handler.get_streams(streamers)
+
+        if len(live_streams) > 0:
+            streamers = await self.mark_as_online(streamers, live_streams)
+
+        self.mark_as_offline(streamers, live_streams)
+
+    async def announce(self, streamer: StreamerInterface, stream: TwitchStream) -> None:
+        """
+        Announces to the discord server when a streamer goes live
+
+        Args:
+            streamer (StreamerInterface): The streamer
+            stream (TwitchStream): The twitch stream
+
+        Returns:
+            None
+        """
+
+        load_dotenv()
+        channel = self.bot.get_channel(os.getenv('DISCORD_ANNOUNCE_CHANNEL'))
+        user = await self.bot.fetch_user(streamer.id)
+        embed = discord.Embed(
+            title=streamer.username,
+            description=f"{user.mention} has just gone live on Twitch!"
+        )
+
+        if stream.thumbnail:
+            thumbnail = stream.thumbnail
+            thumbnail = thumbnail.replace('{width}', '600')
+            thumbnail = thumbnail.replace('{height}', '400')
+            embed.set_image(url=thumbnail)
+
+        embed.add_field(name="Twitch URL", value=f'https://twitch.tv/{streamer.username}')
+
+        if stream.title:
+            embed.add_field(name="Title", value=stream.title, inline=False)
+
+        if stream.game_name:
+            embed.add_field(name="Currently Playing", value=stream.game_name, inline=False)
+
+        if len(streamer.roles) > 0:
+            role_list = self.generate_role_list(streamer.roles, channel)
+            embed.add_field(name='Tagging', value=role_list, inline=False)
+
+        await channel.send(embed=embed)
+
+    @staticmethod
+    def generate_role_list(roles: list, ctx) -> str:
+        """
+        Generates a string with a list of tagged roles
+
+        Args:
+            roles (list): A list of role objects
+            ctx: Represents the :class:`.Context`
+
+        Returns:
+
+        """
+        role_list = ''
+        for role in roles:
+            role_tag = get(ctx.guild.roles, id=role.id)
+            role_list += f"{role_tag.mention}, "
+
+        return role_list[len:-2]
+
+    async def mark_as_online(self, streamers: list, live_streams: dict) -> list:
+        """
+        Flags any streamers as live and remove them from the list
+
+        Args:
+            streamers (list): A list of Streamer objects
+            live_streams (dict): A dict of streams
+
+        Returns:
+            List: The remaining streamers
+        """
+
+        for index, streamer in enumerate(streamers):
+            if streamer.username in live_streams and not streamer.is_online:
+                self.datasource.mark_status(streamer.id, True)
+                await self.announce(streamer, live_streams[streamer.username])
+                streamers.pop(index)
+
+        return streamers
+
+    def mark_as_offline(self, streamers: list, live_streams: dict) -> None:
+        """
+        Flags any streamers as offline
+
+        Args:
+            streamers (list): A list of streamer objects
+            live_streams (dict): A dict of streams
+
+        Returns:
+            None
+        """
+
+        for streamer in streamers:
+            if streamer.username not in live_streams and streamer.is_online:
+                self.datasource.mark_status(streamer.id, False)
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        """
+        Executed on ready, currently used to start the check streamers task
+
+        Returns:
+            None
+        """
+
+        self.check_streamers.start()
 
     @commands.command(name='add_streamer', pass_context=True)
     @commands.has_permissions(administrator=True)
@@ -138,6 +265,40 @@ class CommandsCog(commands.Cog):
             except ValueError:
                 continue
 
+    @commands.command(name='enable_announcements', pass_context=True)
+    @commands.has_permissions(administrator=True)
+    @commands.guild_only()
+    async def enable_announcements(self, ctx) -> None:
+        """
+        Used to enable the check streamers task
+
+        Args:
+            ctx: Represents the :class:`.Context`
+
+        Returns:
+            None
+        """
+
+        self.check_streamers.start()
+        await ctx.send('I am now actively checking twitch streams')
+
+    @commands.command(name='disable_announcements', pass_context=True)
+    @commands.has_permissions(administrator=True)
+    @commands.guild_only()
+    async def disable_announcements(self, ctx) -> None:
+        """
+        Used to disable the check streamers task
+
+        Args:
+            ctx: Represents the :class:`.Context`
+
+        Returns:
+            None
+        """
+
+        self.check_streamers.stop()
+        await ctx.send('I will no longer check twitch streams')
+
     @commands.command(name='list_streamers', pass_context=True)
     @commands.has_permissions(administrator=True)
     @commands.guild_only()
@@ -152,27 +313,28 @@ class CommandsCog(commands.Cog):
             None
         """
 
-        streamer_mapper = StreamerMapper(self.datasource, TwitchHandler())
+        streamer_mapper = StreamerMapper(self.datasource)
         streamers = streamer_mapper.map()
 
         for streamer in streamers:
             user = await self.bot.fetch_user(streamer.id)
             embed = discord.Embed(
                 title=streamer.username,
-                description=f"You can follow {user.mention} on twitch at"
-                            f" https://twitch.tv/{streamer.username}"
+                description=f"You can follow {user.mention} on twitch at "
+                            f"https://twitch.tv/{streamer.username}"
             )
+
             embed.set_thumbnail(url=user.avatar_url)
-            role_list = "Subscribe to the following roles to be alerted when they're next live:\n "
 
-            for role in streamer.roles:
-                role_tag = get(ctx.guild.roles, id=role.id)
-                role_list += f"{role_tag.mention}, "
+            if len(streamer.roles) > 0:
+                role_list = "Subscribe to the following roles to be alerted when they're next live:\n "
+                role_list += self.generate_role_list(streamer.roles, ctx)
+                embed.add_field(name="Roles", value=role_list, inline=False)
 
-            embed.add_field(name="Roles", value=role_list)
             await ctx.send(embed=embed)
 
 
 def setup(bot):
     """Sets up the bot by adding the commands cog"""
+
     bot.add_cog(CommandsCog(bot))

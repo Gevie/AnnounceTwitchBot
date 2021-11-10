@@ -1,8 +1,6 @@
 """The streamer file for the announce twitch bot module"""
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Optional
-from twitch_api import TwitchStreamInterface, TwitchHandlerInterface
 from whitelist import DatasourceHandlerInterface
 
 
@@ -10,6 +8,11 @@ class StreamerInterface(ABC):
     """
     The streamer interface
     """
+
+    id: int
+    username: str
+    roles: list
+    is_online: bool
 
     @abstractmethod
     def is_match(self, username: str) -> bool:
@@ -21,6 +24,15 @@ class StreamerInterface(ABC):
 
         Returns
             bool: True if matched else false
+        """
+
+    @abstractmethod
+    def is_live(self) -> bool:
+        """
+        Checks if the streamer is live or not
+
+        Returns:
+            bool: True if live, else false
         """
 
 
@@ -44,6 +56,7 @@ class Role:
     """
     Holds an instance of a role
     """
+
     id: int
     name: str
 
@@ -53,12 +66,8 @@ class Streamer(StreamerInterface):
     """
     Holds an instance of a streamer
     """
-    id: int
-    username: str
-    roles: list
-    twitch_stream: Optional[TwitchStreamInterface] = None
 
-    def is_match(self, username) -> bool:
+    def is_match(self, username: str) -> bool:
         """
         Checks if the passed username matches the streamer
 
@@ -70,6 +79,16 @@ class Streamer(StreamerInterface):
         """
 
         return self.username == username
+
+    def is_live(self) -> bool:
+        """
+        Checks if the streamer is live or not
+
+        Returns:
+            bool: True if live, else false
+        """
+
+        return self.is_online
 
 
 @dataclass
@@ -100,7 +119,6 @@ class StreamerMapper(MapperInterface):
     Maps streamers from the datasource into objects
     """
     datasource_handler: DatasourceHandlerInterface
-    twitch_handler: TwitchHandlerInterface
 
     def map(self) -> list:
         """
@@ -114,14 +132,12 @@ class StreamerMapper(MapperInterface):
 
         streamers = []
         for streamer in data['Streamers']:
-            twitch_stream = self.twitch_handler.get_stream(streamer['username'])
-
             roles = RoleMapper(streamer['roles']).map()
             streamers.append(Streamer(
                 int(streamer['user_id']),
                 streamer['username'],
                 roles,
-                twitch_stream
+                streamer['is_online']
             ))
 
         return streamers
