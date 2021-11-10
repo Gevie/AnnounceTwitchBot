@@ -1,8 +1,11 @@
 """The commands file of the announce twitch bot module"""
+import os
 
 import discord
 from discord.ext import commands, tasks
 from discord.utils import get
+from dotenv import load_dotenv
+
 from streamer import StreamerMapper
 from twitch_api import TwitchHandler
 from whitelist import JsonDatasourceHandler, NotFoundException
@@ -55,23 +58,27 @@ class CommandsCog(commands.Cog):
             None
         """
 
-        channel = self.bot.get_channel(873690928991305758)
+        load_dotenv()
+        channel = self.bot.get_channel(os.getenv('DISCORD_ANNOUNCE_CHANNEL'))
         user = await self.bot.fetch_user(streamer.id)
         embed = discord.Embed(
             title=streamer.username,
             description=f"{user.mention} has just gone live on Twitch!"
         )
 
-        print(stream)
-        thumbnail = stream.thumbnail
-        thumbnail = thumbnail.replace('{width}', '600')
-        thumbnail = thumbnail.replace('{height}', '400')
-        embed.set_image(url=thumbnail)
+        if stream.thumbnail:
+            thumbnail = stream.thumbnail
+            thumbnail = thumbnail.replace('{width}', '600')
+            thumbnail = thumbnail.replace('{height}', '400')
+            embed.set_image(url=thumbnail)
 
         embed.add_field(name="Twitch URL", value=f'https://twitch.tv/{streamer.username}')
-        embed.add_field(name="Title", value=stream.title, inline=False)
-        embed.add_field(name="Currently Playing", value=stream.game_name, inline=False)
-        embed.add_field(name="Viewers", value=stream.viewer_count, inline=False)
+
+        if stream.title:
+            embed.add_field(name="Title", value=stream.title, inline=False)
+
+        if stream.game_name:
+            embed.add_field(name="Currently Playing", value=stream.game_name, inline=False)
 
         if len(streamer.roles) > 0:
             role_list = ''

@@ -3,7 +3,6 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 from itertools import islice
-from typing import Optional
 import os
 from dotenv import load_dotenv
 import twitch
@@ -75,6 +74,8 @@ class TwitchHandler(TwitchHandlerInterface):
 
         users = list(map(lambda streamer: streamer.username, streamers))
         response = self.client.get_streams(user_logins=users)
+
+        print("Checking Streams...")
 
         streams = {}
         for stream in islice(response, 1, len(users)):

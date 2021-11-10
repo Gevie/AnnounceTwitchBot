@@ -2,7 +2,6 @@
 from unittest.mock import Mock
 import unittest
 from streamer import Role, RoleMapper, MapperInterface, Streamer, StreamerInterface, StreamerMapper
-from twitch_api import TwitchHandlerInterface
 from whitelist import DatasourceHandlerInterface
 
 
@@ -38,14 +37,18 @@ class TestStreamer(unittest.TestCase):
         """
 
         # Give
-        streamer = Streamer(1, 'Test', [
-            Role(1, 'Test')
-        ])
+        streamer = Streamer(
+            1,
+            'Test',
+            [Role(1, 'Test')],
+            True
+        )
 
         # Then
         self.assertTrue(isinstance(streamer, StreamerInterface))
         self.assertEqual(streamer.id, 1)
         self.assertEqual(streamer.username, 'Test')
+        self.assertTrue(streamer.is_online)
 
         self.assertTrue(isinstance(streamer.roles, list))
 
@@ -62,7 +65,7 @@ class TestStreamer(unittest.TestCase):
         """
 
         # Give
-        streamer = Streamer(1, 'Test Streamer', [])
+        streamer = Streamer(1, 'Test Streamer', [], True)
 
         # When
         successful_match = streamer.is_match('Test Streamer')
@@ -86,8 +89,7 @@ class TestStreamerMapper(unittest.TestCase):
 
         # Give
         datasource_handler = Mock(spec=DatasourceHandlerInterface)
-        twitch_handler = Mock(spec=TwitchHandlerInterface)
-        streamer_mapper = StreamerMapper(datasource_handler, twitch_handler)
+        streamer_mapper = StreamerMapper(datasource_handler)
 
         # Then
         self.assertTrue(streamer_mapper, MapperInterface)
@@ -117,15 +119,13 @@ class TestStreamerMapper(unittest.TestCase):
                             "role_id": 2,
                             "name": "MockObject"
                         }
-                    ]
+                    ],
+                    "is_online": True
                 }
             ]
         }
 
-        twitch_handler = Mock(spec=TwitchHandlerInterface)
-        twitch_handler.get_stream.return_value = None
-
-        streamer_mapper = StreamerMapper(datasource, twitch_handler)
+        streamer_mapper = StreamerMapper(datasource)
 
         # When
         mapped_streamers = streamer_mapper.map()
