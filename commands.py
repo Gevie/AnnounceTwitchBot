@@ -1,13 +1,11 @@
 """The commands file of the announce twitch bot module"""
 import os
-
 import discord
 from discord.ext import commands, tasks
 from discord.utils import get
 from dotenv import load_dotenv
-
-from streamer import StreamerMapper
-from twitch_api import TwitchHandler
+from streamer import StreamerMapper, StreamerInterface
+from twitch_api import TwitchHandler, TwitchStream
 from whitelist import JsonDatasourceHandler, NotFoundException
 
 
@@ -46,13 +44,13 @@ class CommandsCog(commands.Cog):
 
         self.mark_as_offline(streamers, live_streams)
 
-    async def announce(self, streamer, stream) -> None:
+    async def announce(self, streamer: StreamerInterface, stream: TwitchStream) -> None:
         """
         Announces to the discord server when a streamer goes live
 
         Args:
             streamer (StreamerInterface): The streamer
-            stream (TwitchStreamInterface): The twitch stream
+            stream (TwitchStream): The twitch stream
 
         Returns:
             None
@@ -81,14 +79,29 @@ class CommandsCog(commands.Cog):
             embed.add_field(name="Currently Playing", value=stream.game_name, inline=False)
 
         if len(streamer.roles) > 0:
-            role_list = ''
-            for role in streamer.roles:
-                role_tag = get(channel.guild.roles, id=role.id)
-                role_list += f"{role_tag.mention}, "
-
-            embed.add_field(name='Tagging', value=role_list[:-2], inline=False)
+            role_list = self.generate_role_list(streamer.roles, channel)
+            embed.add_field(name='Tagging', value=role_list, inline=False)
 
         await channel.send(embed=embed)
+
+    @staticmethod
+    def generate_role_list(roles: list, ctx) -> str:
+        """
+        Generates a string with a list of tagged roles
+
+        Args:
+            roles (list): A list of role objects
+            ctx: Represents the :class:`.Context`
+
+        Returns:
+
+        """
+        role_list = ''
+        for role in roles:
+            role_tag = get(ctx.guild.roles, id=role.id)
+            role_list += f"{role_tag.mention}, "
+
+        return role_list[len:-2]
 
     async def mark_as_online(self, streamers: list, live_streams: dict) -> list:
         """
@@ -125,7 +138,6 @@ class CommandsCog(commands.Cog):
         for streamer in streamers:
             if streamer.username not in live_streams and streamer.is_online:
                 self.datasource.mark_status(streamer.id, False)
-                print(f'Marking {streamer.id} as offline')
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -308,17 +320,17 @@ class CommandsCog(commands.Cog):
             user = await self.bot.fetch_user(streamer.id)
             embed = discord.Embed(
                 title=streamer.username,
-                description=f"You can follow {user.mention} on twitch at"
-                            f" https://twitch.tv/{streamer.username}"
+                description=f"You can follow {user.mention} on twitch at "
+                            f"https://twitch.tv/{streamer.username}"
             )
+
             embed.set_thumbnail(url=user.avatar_url)
-            role_list = "Subscribe to the following roles to be alerted when they're next live:\n "
 
-            for role in streamer.roles:
-                role_tag = get(ctx.guild.roles, id=role.id)
-                role_list += f"{role_tag.mention}, "
+            if len(streamer.roles) > 0:
+                role_list = "Subscribe to the following roles to be alerted when they're next live:\n "
+                role_list += self.generate_role_list(streamer.roles, ctx)
+                embed.add_field(name="Roles", value=role_list, inline=False)
 
-            embed.add_field(name="Roles", value=role_list)
             await ctx.send(embed=embed)
 
 

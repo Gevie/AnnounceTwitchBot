@@ -9,6 +9,11 @@ class StreamerInterface(ABC):
     The streamer interface
     """
 
+    id: int
+    username: str
+    roles: list
+    is_online: bool
+
     @abstractmethod
     def is_match(self, username: str) -> bool:
         """
@@ -61,11 +66,6 @@ class Streamer(StreamerInterface):
     """
     Holds an instance of a streamer
     """
-
-    id: int
-    username: str
-    roles: list
-    is_online: bool
 
     def is_match(self, username: str) -> bool:
         """

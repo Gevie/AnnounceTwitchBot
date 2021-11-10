@@ -37,7 +37,7 @@ class TwitchHandlerInterface(ABC):
             streamers (list): The streamers to check for
 
         Returns:
-            list: A list of TwitchStreamInterfaces
+            list: A list of TwitchStream
         """
 
 
@@ -69,7 +69,7 @@ class TwitchHandler(TwitchHandlerInterface):
             streamers (list): The streamers to check for
 
         Returns:
-            list: A list of TwitchStreamInterfaces
+            list: A list of TwitchStream
         """
 
         users = list(map(lambda streamer: streamer.username, streamers))
